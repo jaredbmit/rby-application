@@ -5,13 +5,15 @@ import h5py
 import sys
 import time
 import argparse
+from typing import Optional
+
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from scipy import interpolate
 import scipy.spatial.transform as tf
-from matplotlib.animation import FuncAnimation
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
 
 import rby1_sdk as sdk
 
@@ -23,16 +25,28 @@ ACCELERATION_LIMIT = 1.0
 STOP_ORIENTATION_TRACKING_ERROR = 1e-5
 STOP_POSITION_TRACKING_ERROR = 1e-5
 # WEIGHT = 0.0015
-WEIGHT = 0.01
-CENTERING_WEIGHT = WEIGHT / 100
+# WEIGHT = 0.01
+# VELOCITY_TRACKING_GAIN = 0.01
+
+# Scooping Powder Control Presets
+WEIGHT = 1.0
+CENTERING_WEIGHT = WEIGHT / 500
 STOP_COST = 1e-2
 VELOCITY_LIMIT_SCALE = 1.0
-# VELOCITY_TRACKING_GAIN = 0.01
 VELOCITY_TRACKING_GAIN = 0.1
 MIN_DELTA_COST = 1e-4
-# PATIENCE = 10
-PATIENCE = 1
+PATIENCE = 10
 CONTROL_HOLD_TIME = 300
+
+# # Stirring Control Presets
+# WEIGHT = 1.0
+# CENTERING_WEIGHT = WEIGHT / 2000
+# STOP_COST = 1e-2
+# VELOCITY_LIMIT_SCALE = 1.0
+# VELOCITY_TRACKING_GAIN = 0.1
+# MIN_DELTA_COST = 1e-4
+# PATIENCE = 10
+# CONTROL_HOLD_TIME = 300
 
 # Q_HOME = (
 #     np.array(
@@ -40,6 +54,7 @@ CONTROL_HOLD_TIME = 300
 #     )
 #     * D2R
 # )
+
 Q_HOME = (
     np.array(
         [0, 30, -60, 30, 0, 0, 15, -15, 0, -90, 0, 15, 0, 15, 15, 0, -90, 0, 15, 0]
@@ -48,22 +63,51 @@ Q_HOME = (
 )
 
 
+def schedule_weight(factor, nominal_weight):
+    """
+    Schedules control policy weighting to include pre- and post- ramping behavior
+    This is to mitigate torque impulses at trajectory bookends.
+
+    Args:
+        factor (float): Proportion of time already passed. Should be in [0, 1].
+        nominal_weight (float): The nominal weight value. Positive.
+
+    Returns:
+        weight (float): Scheduled weight.
+    """
+    if 0 <= factor <= 0.1:
+        weight = 10 * factor * nominal_weight
+    elif 0.1 < factor < 0.9:
+        weight = nominal_weight
+    elif 0.9 <= factor <= 1:
+        weight = 10 * (1.0 - factor) * nominal_weight
+    else:
+        return ValueError("`factor` must be in [0, 1].")
+    return weight
+
+
 class Rainbow:
-    def __init__(self):
+    def __init__(self, address, power_device, servo):
         self.links = [
             "base",
             "link_torso_5",
+            "link_left_arm_1",
+            "link_right_arm_1",
             "ee_left",
             "ee_right",
         ]
         self.link_id_map = {
             "base": 0,
             "link_torso_5": 1,
+            "link_left_arm_1": 2,
+            "link_right_arm_1": 3,
             "ee_left": 4,
             "ee_right": 5,
         }
 
-    def setup(self, address, power_device, servo_device):
+        self._setup(address, power_device, servo)
+
+    def _setup(self, address, power_device, servo_device):
         print("Attempting to connect to the robot...")
 
         self.robot = sdk.create_robot_a(address)
@@ -132,7 +176,6 @@ class Rainbow:
         return pose
 
     def reset_pose(self):
-        # Build command
         rc = sdk.RobotCommandBuilder().set_command(
             sdk.ComponentBasedCommandBuilder().set_body_command(
                 sdk.BodyCommandBuilder().set_command(
@@ -151,115 +194,64 @@ class Rainbow:
 
         return 0
 
-    def command_hand_pose(
+    def command_cartesian_pose(
         self,
-        position: np.ndarray,
-        rotation: np.ndarray,
-        T_torso,
-        T_right,
-        side: str,
-        controller: str = "cartesian",
+        T_left: Optional[np.ndarray],
+        T_right: Optional[np.ndarray],
+        T_torso: Optional[np.ndarray],
     ):
-        """Commands a pose for a hand wrt base frame"""
-        if controller not in ["cartesian", "optimal"]:
-            raise ValueError(
-                f"`controller` must be 'cartesian' or 'optimal', not {controller}"
+        """
+        Commands a trajectory for the 3 main body components
+        using RB-Y1's optimal controller.'
+
+        Args:
+            T_left (np.ndarray): (4, 4) Pose for the left end effector.
+            T_right (np.ndarray): (4, 4) Pose for the right end effector.
+            T_torso (np.ndarray): (4, 4) Pose for the torso.
+
+        Returns:
+            (int): 1 if failure, 0 if success or unknown.
+        """
+        cartesian_command = (
+            sdk.CartesianCommandBuilder()
+            .set_minimum_time(MINIMUM_TIME)
+            .set_stop_orientation_tracking_error(STOP_ORIENTATION_TRACKING_ERROR)
+            .set_stop_position_tracking_error(STOP_POSITION_TRACKING_ERROR)
+        )
+
+        if T_left is not None:
+            cartesian_command.add_target(
+                "base",
+                "ee_left",
+                T_left,
+                LINEAR_VELOCITY_LIMIT,
+                ANGULAR_VELOCITY_LIMIT,
+                ACCELERATION_LIMIT,
             )
-        if side not in ["left", "right"]:
-            raise ValueError(f"`side` must be 'left' or 'right', not {side}")
 
-        T = np.eye(4)
+        if T_right is not None:
+            cartesian_command.add_target(
+                "base",
+                "ee_right",
+                T_right,
+                LINEAR_VELOCITY_LIMIT,
+                ANGULAR_VELOCITY_LIMIT,
+                ACCELERATION_LIMIT,
+            )
 
-        T[:3, 3] = position
-        T[:3, :3] = rotation
+        if T_torso is not None:
+            cartesian_command.add_target(
+                "base",
+                "link_torso_5",
+                T_torso,
+                LINEAR_VELOCITY_LIMIT,
+                ANGULAR_VELOCITY_LIMIT,
+                ACCELERATION_LIMIT,
+            )
 
-        if side == "right":
-            raise NotImplementedError()
-            # if controller == "cartesian":
-            #     rc = sdk.RobotCommandBuilder().set_command(
-            #         sdk.ComponentBasedCommandBuilder().set_body_command(
-            #             sdk.BodyComponentBasedCommandBuilder().set_right_arm_command(
-            #                 sdk.CartesianCommandBuilder()
-            #                 .add_target(
-            #                     "base",
-            #                     "ee_right",
-            #                     T,
-            #                     LINEAR_VELOCITY_LIMIT,
-            #                     ANGULAR_VELOCITY_LIMIT,
-            #                     ACCELERATION_LIMIT / 2,
-            #                 )
-            #                 .set_minimum_time(MINIMUM_TIME)
-            #                 .set_stop_orientation_tracking_error(
-            #                     STOP_ORIENTATION_TRACKING_ERROR
-            #                 )
-            #                 .set_stop_position_tracking_error(
-            #                     STOP_POSITION_TRACKING_ERROR
-            #                 )
-            #             )
-            #         )
-            #     )
-            # elif controller == "optimal":
-            #     rc = sdk.RobotCommandBuilder().set_command(
-            #         sdk.ComponentBasedCommandBuilder().set_body_command(
-            #             sdk.OptimalControlCommandBuilder()
-            #             .add_cartesian_target(
-            #                 "base", "link_torso_5", T_torso, WEIGHT, WEIGHT
-            #             )
-            #             .add_cartesian_target("base", "ee_right", T_right, WEIGHT, WEIGHT)
-            #             .add_cartesian_target("base", "ee_left", T, WEIGHT, WEIGHT)
-            #             .add_joint_position_target("right_arm_2", np.pi / 2, WEIGHT)
-            #             .add_joint_position_target("left_arm_2", -np.pi / 2, WEIGHT)
-            #             .set_velocity_limit_scaling(0.05)
-            #             .set_velocity_tracking_gain(VELOCITY_TRACKING_GAIN)
-            #             .set_stop_cost(STOP_COST)
-            #             .set_min_delta_cost(MIN_DELTA_COST)
-            #             .set_patience(PATIENCE)
-            #         )
-            #     )
-        elif side == "left":
-            if controller == "cartesian":
-                rc = sdk.RobotCommandBuilder().set_command(
-                    sdk.ComponentBasedCommandBuilder().set_body_command(
-                        sdk.BodyComponentBasedCommandBuilder().set_left_arm_command(
-                            sdk.CartesianCommandBuilder()
-                            .add_target(
-                                "base",
-                                "ee_left",
-                                T,
-                                LINEAR_VELOCITY_LIMIT,
-                                ANGULAR_VELOCITY_LIMIT,
-                                ACCELERATION_LIMIT / 2,
-                            )
-                            .set_minimum_time(MINIMUM_TIME)
-                            .set_stop_orientation_tracking_error(
-                                STOP_ORIENTATION_TRACKING_ERROR
-                            )
-                            .set_stop_position_tracking_error(
-                                STOP_POSITION_TRACKING_ERROR
-                            )
-                        )
-                    )
-                )
-            elif controller == "optimal":
-                rc = sdk.RobotCommandBuilder().set_command(
-                    sdk.ComponentBasedCommandBuilder().set_body_command(
-                        sdk.OptimalControlCommandBuilder()
-                        .add_cartesian_target(
-                            "base", "link_torso_5", T_torso, WEIGHT, WEIGHT
-                        )
-                        .add_cartesian_target(
-                            "base", "ee_right", T_right, WEIGHT, WEIGHT
-                        )
-                        .add_cartesian_target(
-                            "base", "ee_left", T, WEIGHT * 10, WEIGHT * 10
-                        )
-                        .set_velocity_limit_scaling(0.05)
-                        .set_velocity_tracking_gain(VELOCITY_TRACKING_GAIN)
-                        .set_stop_cost(STOP_COST)
-                        .set_min_delta_cost(MIN_DELTA_COST)
-                        .set_patience(PATIENCE)
-                    )
-                )
+        rc = sdk.RobotCommandBuilder().set_command(
+            sdk.ComponentBasedCommandBuilder().set_body_command(cartesian_command)
+        )
 
         rv = self.robot.send_command(rc, 10).get()
 
@@ -272,333 +264,386 @@ class Rainbow:
 
         return 0
 
-    def command_hand_trajectory(
+    def command_optimal_trajectory(
         self,
         t: np.ndarray,
-        position: np.ndarray,
-        rotation: np.ndarray,
-        T_torso,
-        T_right,
-        side: str,
-        controller: str = "cartesian",
+        T_left: Optional[np.ndarray] = None,
+        T_right: Optional[np.ndarray] = None,
+        T_torso: Optional[np.ndarray] = None,
     ):
-        """Commands a trajectory for a hand wrt base frame"""
-        if controller not in ["cartesian", "optimal"]:
-            raise ValueError(
-                f"`controller` must be 'cartesian' or 'optimal', not {controller}"
-            )
-        if side not in ["left", "right"]:
-            raise ValueError(f"`side` must be 'left' or 'right', not {side}")
+        """
+        Commands a trajectory for the 3 main body components
+        using RB-Y1's optimal controller.
 
-        T = np.eye(4)
+        Note: Assumes the robot is already at the initial pose!
 
+        Also, records true robot trajectories.
+
+        Args:
+            t (np.ndarray): (n,) Time vector.
+            T_left (np.ndarray): (n, 4, 4) Pose sequence for the left end effector.
+            T_right (np.ndarray): (n, 4, 4) Pose sequence for the right end effector.
+            T_torso (np.ndarray): (n, 4, 4) Pose sequence for the torso.
+
+        Returns:
+            (int): 1 if failure, 0 if success or unknown.
+            (np.ndarray): (n, 4, 4) True pose sequence for the left end effector.
+            (np.ndarray): (n, 4, 4) True pose sequence for the right end effector.
+            (np.ndarray): (n, 4, 4) True pose sequence for the torso end.
+        """
         duration = int(max(t)) + 1
         stream = self.robot.create_command_stream(10 * duration)
 
+        T_true_left = []
+        T_true_right = []
+        T_true_torso = []
+
         for i in range(len(t) - 1):
 
-            dt = float(t[i + 1] - t[i])
-            T[:3, 3] = position[i]
-            T[:3, :3] = rotation[i]
+            T_true_left.append(self.get_pose("base", "ee_left"))
+            T_true_right.append(self.get_pose("base", "ee_right"))
+            T_true_torso.append(self.get_pose("base", "link_torso_5"))
 
-            if side == "right":
-                raise NotImplementedError
-                # if controller == "cartesian":
-                #     rc = sdk.RobotCommandBuilder().set_command(
-                #         sdk.ComponentBasedCommandBuilder().set_body_command(
-                #             sdk.BodyComponentBasedCommandBuilder().set_right_arm_command(
-                #                 sdk.CartesianCommandBuilder()
-                #                 .set_command_header(
-                #                     sdk.CommandHeaderBuilder().set_control_hold_time(10)
-                #                 )
-                #                 .add_target(
-                #                     "base",
-                #                     "ee_right",
-                #                     T,
-                #                     LINEAR_VELOCITY_LIMIT,
-                #                     ANGULAR_VELOCITY_LIMIT,
-                #                     ACCELERATION_LIMIT / 2,
-                #                 )
-                #                 .set_minimum_time(dt)
-                #             )
-                #         )
-                #     )
-                # elif controller == "optimal":
-                #     rc = sdk.RobotCommandBuilder().set_command(
-                #         sdk.ComponentBasedCommandBuilder().set_body_command(
-                #             sdk.OptimalControlCommandBuilder()
-                #             .set_command_header(
-                #                 sdk.CommandHeaderBuilder().set_control_hold_time(10)
-                #             )
-                #             .add_cartesian_target("base", "ee_right", T, WEIGHT, WEIGHT)
-                #             .set_velocity_limit_scaling(0.05)
-                #             .set_velocity_tracking_gain(VELOCITY_TRACKING_GAIN)
-                #             .set_stop_cost(STOP_COST)
-                #             .set_min_delta_cost(MIN_DELTA_COST)
-                #             .set_patience(PATIENCE)
-                #         )
-                #     )
-            elif side == "left":
-                if controller == "cartesian":
-                    rc = sdk.RobotCommandBuilder().set_command(
-                        sdk.ComponentBasedCommandBuilder().set_body_command(
-                            sdk.BodyComponentBasedCommandBuilder().set_left_arm_command(
-                                sdk.CartesianCommandBuilder()
-                                .set_command_header(
-                                    sdk.CommandHeaderBuilder().set_control_hold_time(
-                                        CONTROL_HOLD_TIME
-                                    )
-                                )
-                                .add_target(
-                                    "base",
-                                    "ee_left",
-                                    T,
-                                    LINEAR_VELOCITY_LIMIT,
-                                    ANGULAR_VELOCITY_LIMIT,
-                                    ACCELERATION_LIMIT / 2,
-                                )
-                                .set_minimum_time(dt)
-                            )
-                        )
-                    )
-                elif controller == "optimal":
-                    rc = sdk.RobotCommandBuilder().set_command(
-                        sdk.ComponentBasedCommandBuilder().set_body_command(
-                            sdk.OptimalControlCommandBuilder()
-                            .set_command_header(
-                                sdk.CommandHeaderBuilder().set_control_hold_time(
-                                    CONTROL_HOLD_TIME
-                                )
-                            )
-                            .add_cartesian_target(
-                                "base", "link_torso_5", T_torso, WEIGHT, WEIGHT
-                            )
-                            .add_cartesian_target("base", "ee_left", T, WEIGHT, WEIGHT)
-                            .add_joint_position_target(
-                                "left_arm_0", 15.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "left_arm_1", 15.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "left_arm_2", 0.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "left_arm_3", -90.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "left_arm_4", 0.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "left_arm_5", 15.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "left_arm_6", 0.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "right_arm_0", 15.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "right_arm_1", -15.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "right_arm_2", 0.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "right_arm_3", -90.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "right_arm_4", 0.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "right_arm_5", 15.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .add_joint_position_target(
-                                "right_arm_6", 0.0 * D2R, CENTERING_WEIGHT
-                            )
-                            .set_velocity_limit_scaling(VELOCITY_LIMIT_SCALE)
-                            .set_velocity_tracking_gain(VELOCITY_TRACKING_GAIN)
-                            .set_stop_cost(STOP_COST)
-                            .set_min_delta_cost(MIN_DELTA_COST)
-                            .set_patience(PATIENCE)
-                        )
-                    )
+            time_factor = t[i] / max(t)
+            weight = schedule_weight(time_factor, WEIGHT)
+
+            dt = float(t[i + 1] - t[i])
+
+            # Using optimal controller
+            optimal_command = (
+                sdk.OptimalControlCommandBuilder()
+                .set_command_header(
+                    sdk.CommandHeaderBuilder().set_control_hold_time(CONTROL_HOLD_TIME)
+                )
+                .add_joint_position_target("torso_0", 0.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("torso_1", 30.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("torso_2", -60.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("torso_3", 30.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("torso_4", 0.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("torso_5", 0.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_0", 15.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_1", 15.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_2", 0.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_3", -90.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_4", 0.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_5", 15.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_6", 0.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_0", 15.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_1", -15.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_2", 0.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_3", -90.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_4", 0.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_5", 15.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_6", 0.0 * D2R, CENTERING_WEIGHT)
+                .set_velocity_limit_scaling(VELOCITY_LIMIT_SCALE)
+                .set_velocity_tracking_gain(VELOCITY_TRACKING_GAIN)
+                .set_stop_cost(STOP_COST)
+                .set_min_delta_cost(MIN_DELTA_COST)
+                .set_patience(PATIENCE)
+            )
+
+            if T_left is not None:
+                optimal_command = optimal_command.add_cartesian_target(
+                    "base", "ee_left", T_left[i + 1], weight, weight
+                )
+
+            if T_right is not None:
+                optimal_command = optimal_command.add_cartesian_target(
+                    "base", "ee_right", T_right[i + 1], weight, weight
+                )
+
+            if T_torso is not None:
+                optimal_command = optimal_command.add_cartesian_target(
+                    "base", "link_torso_5", T_torso[i + 1], weight, weight
+                )
+
+            rc = sdk.RobotCommandBuilder().set_command(
+                sdk.ComponentBasedCommandBuilder().set_body_command(optimal_command)
+            )
 
             rv = stream.send_command(rc)
 
             time.sleep(dt)
 
+        T_true_left.append(self.get_pose("base", "ee_left"))
+        T_true_right.append(self.get_pose("base", "ee_right"))
+        T_true_torso.append(self.get_pose("base", "link_torso_5"))
+
+        T_true_left = np.array(T_true_left)
+        T_true_right = np.array(T_true_right)
+        T_true_torso = np.array(T_true_torso)
+
         if rv.finish_code == sdk.RobotCommandFeedback.FinishCode.Unknown:
             print("Control finish unknown.")
-            return 0
         elif rv.finish_code != sdk.RobotCommandFeedback.FinishCode.Ok:
             print("Error: Failed to conduct demo motion.")
-            return 1
+            return 1, T_true_left, T_true_right, T_torso
 
-        return 0
+        return 0, T_true_left, T_true_right, T_torso
 
 
 def follow_trajectory(address, power_device, servo):
-    robot = Rainbow()
-    robot.setup(address, power_device, servo)
+    robot = Rainbow(address, power_device, servo)
+
     if not robot.reset_pose():
         print("Pose reset.")
 
-    trajectory_file = os.path.expanduser(
-        "~/drl/human/data/stirring/stirring_inference.hdf5"
-    )
-    with h5py.File(trajectory_file, "r") as f:
-        trajectory = f["trajectory_000"]["data"]
-        t = np.array(trajectory["time"])
-        pos_human_to_left_hand_H = np.array(trajectory["pos_human_to_left_hand_H"])
-        rot_human_to_left_hand = np.array(trajectory["rot_human_to_left_hand"]).reshape(
-            (-1, 3, 3)
-        )
+    # Load example trajectory
+    # trajectory_file = os.path.expanduser(
+    #     "~/drl/human/data/stirring/stirring_inference.hdf5"
+    # )
+    # trajectory_file = os.path.expanduser(
+    #     "~/drl/human/data/scooping_powder/scooping_powder_inference.hdf5"
+    # )
 
-    # Constants
-    rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
-    rot_left_hand_to_left_gripper = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
-    pos_left_hand_to_left_gripper_LG = np.zeros(3)
+    # with h5py.File(trajectory_file, "r") as f:
+    #     trajectory = f["trajectory_000"]["data"]
+    #     t = np.array(trajectory["time"])
+    #     pos_human_to_left_hand_H = np.array(trajectory["pos_human_to_left_hand_H"])
+    #     rot_human_to_left_hand = np.array(trajectory["rot_human_to_left_hand"]).reshape(
+    #         (-1, 3, 3)
+    #     )
 
-    # Rotation trajectory
-    rot_robot_to_left_gripper = (
-        rot_robot_to_human @ rot_human_to_left_hand @ rot_left_hand_to_left_gripper
-    )
+    # # Constants
+    # rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+    # rot_left_hand_to_left_gripper = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
+    # pos_left_hand_to_left_gripper_LG = np.zeros(3)
 
-    # Static position relations
-    pos_human_to_left_hand_init_R = rot_robot_to_human @ pos_human_to_left_hand_H[0]
-    pos_robot_to_left_gripper_init_R = robot.get_pose("base", "ee_left")[:3, 3]
-    pos_robot_to_human_R = (
-        pos_robot_to_left_gripper_init_R
-        - rot_robot_to_left_gripper[0] @ pos_left_hand_to_left_gripper_LG
-        - pos_human_to_left_hand_init_R
-    )
-    pos_robot_to_human_R[0] *= 0.5
-    pos_robot_to_human_R[1] *= 0.5
+    # # Rotation trajectory
+    # rot_robot_to_left_gripper = (
+    #     rot_robot_to_human @ rot_human_to_left_hand @ rot_left_hand_to_left_gripper
+    # )
 
-    # Position trajectory
-    pos_human_to_left_hand_R = (
-        rot_robot_to_human @ pos_human_to_left_hand_H.reshape((-1, 3, 1))
-    ).reshape((-1, 3))
-    pos_left_hand_to_left_gripper_R = (
-        rot_robot_to_left_gripper @ pos_left_hand_to_left_gripper_LG
-    )
-    pos_robot_to_left_gripper_R = (
-        pos_robot_to_human_R
-        + pos_human_to_left_hand_R
-        + pos_left_hand_to_left_gripper_R
-    )
+    # # Static position relations
+    # pos_human_to_left_hand_init_R = rot_robot_to_human @ pos_human_to_left_hand_H[0]
+    # pos_robot_to_left_gripper_init_R = robot.get_pose("base", "ee_left")[:3, 3]
+    # pos_robot_to_human_R = (
+    #     pos_robot_to_left_gripper_init_R
+    #     - rot_robot_to_left_gripper[0] @ pos_left_hand_to_left_gripper_LG
+    #     - pos_human_to_left_hand_init_R
+    # )
 
-    # # Scale trajectory
-    # scale_factor = 2 / 3
-    # mean = np.mean(pos_robot_to_left_gripper_R, axis=0)
+    # # Position trajectory
+    # pos_human_to_left_hand_R = (
+    #     rot_robot_to_human @ pos_human_to_left_hand_H.reshape((-1, 3, 1))
+    # ).reshape((-1, 3))
+    # pos_left_hand_to_left_gripper_R = (
+    #     rot_robot_to_left_gripper @ pos_left_hand_to_left_gripper_LG
+    # )
     # pos_robot_to_left_gripper_R = (
-    #     scale_factor * (pos_robot_to_left_gripper_R - mean) + mean
+    #     pos_robot_to_human_R
+    #     + pos_human_to_left_hand_R
+    #     + pos_left_hand_to_left_gripper_R
     # )
 
-    # Re-interpolate
-    dt = 0.01
-    time_in = t
-    time_out = np.arange(0, np.max(t), dt)
-    interpolate_position = interpolate.interp1d(
-        time_in, pos_robot_to_left_gripper_R, axis=0
-    )
-    pos_robot_to_left_gripper_R_interp = interpolate_position(time_out)
-    interpolate_rotation = tf.Slerp(
-        time_in, tf.Rotation.from_matrix(rot_robot_to_left_gripper)
-    )
-    rot_robot_to_left_gripper_interp = interpolate_rotation(time_out).as_matrix()
-
-    # # Generate animation
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection="3d")
-    # azim_min = 30
-    # azim_max = 60
-
-    # def update(frame):
-    #     ax.clear()
-
-    #     for i in range(3):
-    #         color = ["red", "green", "blue"][i]
-    #         ax.quiver(
-    #             pos_robot_to_left_gripper_R[frame, 0],
-    #             pos_robot_to_left_gripper_R[frame, 1],
-    #             pos_robot_to_left_gripper_R[frame, 2],
-    #             rot_robot_to_left_gripper[frame, 0, i],
-    #             rot_robot_to_left_gripper[frame, 1, i],
-    #             rot_robot_to_left_gripper[frame, 2, i],
-    #             color=color,
-    #             length=0.1,
-    #         )
-
-    #     # Timestamp & bounds
-    #     ax.set_title(f"t = {t[frame]:.3f}s")
-    #     ax.set_xlim([0.2, 0.7])
-    #     ax.set_ylim([0.0, 0.5])
-    #     ax.set_zlim([0.5, 1.0])
-    #     ax.set_xlabel("X")
-    #     ax.set_ylabel("Y")
-    #     ax.set_zlabel("Z")
-    #     angle = azim_min + (azim_max - azim_min) * frame / len(t)
-    #     ax.view_init(elev=25, azim=angle)
-
-    # interval_s = (t[-1] - t[0]) / (len(t) + 1)
-    # ani = FuncAnimation(
-    #     fig, update, frames=len(t), interval=1000 * interval_s, blit=False
+    # # Re-interpolate
+    # dt = 0.01
+    # time_in = t
+    # time_out = np.arange(0, np.max(time_in), dt)
+    # interpolate_position = interpolate.interp1d(
+    #     time_in, pos_robot_to_left_gripper_R, axis=0
     # )
-    # ani.save("traj.gif")
+    # pos_robot_to_left_gripper_R_interp = interpolate_position(time_out)
+    # interpolate_rotation = tf.Slerp(
+    #     time_in, tf.Rotation.from_matrix(rot_robot_to_left_gripper)
+    # )
+    # rot_robot_to_left_gripper_interp = interpolate_rotation(time_out).as_matrix()
 
-    time.sleep(1)
+    # # Construct pose sequences
+    # T_left = np.zeros((len(time_out), 4, 4))
+    # T_left[:, :3, :3] = rot_robot_to_left_gripper_interp
+    # T_left[:, :3, 3] = pos_robot_to_left_gripper_R_interp
+    # T_left[:, 3, 3] = 1
+    # T_torso = np.repeat(
+    #     robot.get_pose("base", "link_torso_5")[np.newaxis, ...],
+    #     repeats=len(time_out),
+    #     axis=0,
+    # )
 
-    # if not robot.command_hand_pose(
-    #     pos_robot_to_left_gripper_R_interp[0],
-    #     rot_robot_to_left_gripper_interp[0],
-    #     side="left",
-    #     controller="cartesian",
-    # ):
-    #     print("Finished hand trajectory.")
-
+    # # Command starting pose
+    # print("Navigating to start pose.")
+    # result = robot.command_cartesian_pose(
+    #     T_left=T_left[0],
+    #     T_right=None,
+    #     T_torso=T_torso[0],
+    # )
+    # if not result:
+    #     print("Start pose reached.")
     # time.sleep(1)
+
+    # print("Running trajectory.")
+    # result, T_true_left, T_true_right, T_true_torso = robot.command_optimal_trajectory(
+    #     time_out * 2,
+    #     T_left=T_left,
+    #     T_right=None,
+    #     T_torso=T_torso,
+    # )
+    # if not result:
+    #     print("Trajectory finished.")
+    # time.sleep(1)
+
+    # pos_des_left = T_left[:, :3, 3]
+    # pos_true_left = T_true_left[:, :3, 3]
+
+    # fig = plt.figure(figsize=(12, 8))
+    # gs = fig.add_gridspec(4, 2)
+    # ax0 = fig.add_subplot(gs[0, 0])
+    # ax1 = fig.add_subplot(gs[1, 0])
+    # ax2 = fig.add_subplot(gs[2, 0])
+    # ax3 = fig.add_subplot(gs[0, 1])
+    # ax4 = fig.add_subplot(gs[1, 1])
+    # ax5 = fig.add_subplot(gs[2, 1])
+    # ax6 = fig.add_subplot(gs[3, :])
+    # ax0.plot(time_out, pos_des_left[:, 0], label="Desired")
+    # ax1.plot(time_out, pos_des_left[:, 1], label="Desired")
+    # ax2.plot(time_out, pos_des_left[:, 2], label="Desired")
+    # ax0.plot(time_out, pos_true_left[:, 0], label="True")
+    # ax1.plot(time_out, pos_true_left[:, 1], label="True")
+    # ax2.plot(time_out, pos_true_left[:, 2], label="True")
+    # ax0.set_title("X trajectories")
+    # ax1.set_title("Y trajectories")
+    # ax2.set_title("Z trajectories")
+    # ax0.legend()
+    # ax1.legend()
+    # ax2.legend()
+    # ax3.plot(time_out, pos_des_left[:, 0] - pos_true_left[:, 0])
+    # ax4.plot(time_out, pos_des_left[:, 1] - pos_true_left[:, 1])
+    # ax5.plot(time_out, pos_des_left[:, 2] - pos_true_left[:, 2])
+    # ax3.set_title("X error")
+    # ax4.set_title("Y error")
+    # ax5.set_title("Z error")
+    # ax6.plot(time_out, np.linalg.norm(pos_des_left - pos_true_left, axis=1))
+    # ax6.set_title("Total error")
+    # fig.savefig("scooping_powder_tracking_error.png")
 
     # if not robot.reset_pose():
     #     print("Pose reset.")
 
-    T_torso = robot.get_pose("base", "link_torso_5")
-    T_right = robot.get_pose("base", "ee_right")
+    # print("Done.")
 
-    # if not robot.command_hand_pose(
-    #     pos_robot_to_left_gripper_R_interp[0],
-    #     rot_robot_to_left_gripper_interp[0],
-    #     T_torso,
-    #     T_right,
-    #     "left",
-    #     controller="optimal",
-    # ):
-    #     print("Finished hand trajectory.")
+    trajectory_file = os.path.expanduser(
+        "~/drl/human/data/pouring/pouring_inference.hdf5"
+    )
 
-    if not robot.command_hand_trajectory(
-        time_out * 1,
-        pos_robot_to_left_gripper_R_interp,
-        rot_robot_to_left_gripper_interp,
-        T_torso,
-        T_right,
-        side="left",
-        controller="optimal",
-    ):
-        print("Finished hand trajectory.")
+    with h5py.File(trajectory_file, "r") as f:
+        trajectory = f["trajectory_000"]["data"]
+        t = np.array(trajectory["time"])
+        pos_human_to_right_hand_H = np.array(trajectory["pos_human_to_right_hand_H"])
+        rot_human_to_right_hand = np.array(
+            trajectory["rot_human_to_right_hand"]
+        ).reshape((-1, 3, 3))
 
-    # if not robot.command_hand_trajectory(
-    #     t * 2,
-    #     pos_robot_to_left_gripper_R,
-    #     rot_robot_to_left_gripper,
-    #     T_torso,
-    #     T_right,
-    #     side="left",
-    #     controller="optimal",
-    # ):
-    #     print("Finished hand trajectory.")
+    # Constants
+    rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+    rot_right_hand_to_right_gripper = np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]])
+    pos_right_hand_to_right_gripper_RG = np.zeros(3)
 
+    # Rotation trajectory
+    rot_robot_to_right_gripper = (
+        rot_robot_to_human @ rot_human_to_right_hand @ rot_right_hand_to_right_gripper
+    )
+
+    # Static position relations
+    pos_human_to_right_hand_init_R = rot_robot_to_human @ pos_human_to_right_hand_H[0]
+    pos_robot_to_right_gripper_init_R = robot.get_pose("base", "ee_right")[:3, 3]
+    pos_robot_to_human_R = (
+        pos_robot_to_right_gripper_init_R
+        - rot_robot_to_right_gripper[0] @ pos_right_hand_to_right_gripper_RG
+        - pos_human_to_right_hand_init_R
+    )
+
+    # Position trajectory
+    pos_human_to_right_hand_R = (
+        rot_robot_to_human @ pos_human_to_right_hand_H.reshape((-1, 3, 1))
+    ).reshape((-1, 3))
+    pos_right_hand_to_right_gripper_R = (
+        rot_robot_to_right_gripper @ pos_right_hand_to_right_gripper_RG
+    )
+    pos_robot_to_right_gripper_R = (
+        pos_robot_to_human_R
+        + pos_human_to_right_hand_R
+        + pos_right_hand_to_right_gripper_R
+    )
+
+    # Re-interpolate
+    dt = 0.01
+    time_in = t
+    time_out = np.arange(0, np.max(time_in), dt)
+    interpolate_position = interpolate.interp1d(
+        time_in, pos_robot_to_right_gripper_R, axis=0
+    )
+    pos_robot_to_right_gripper_R_interp = interpolate_position(time_out)
+    interpolate_rotation = tf.Slerp(
+        time_in, tf.Rotation.from_matrix(rot_robot_to_right_gripper)
+    )
+    rot_robot_to_right_gripper_interp = interpolate_rotation(time_out).as_matrix()
+
+    # Construct pose sequences
+    T_right = np.zeros((len(time_out), 4, 4))
+    T_right[:, :3, :3] = rot_robot_to_right_gripper_interp
+    T_right[:, :3, 3] = pos_robot_to_right_gripper_R_interp
+    T_right[:, 3, 3] = 1
+    T_torso = np.repeat(
+        robot.get_pose("base", "link_torso_5")[np.newaxis, ...],
+        repeats=len(time_out),
+        axis=0,
+    )
+
+    # Command starting pose
+    print("Navigating to start pose.")
+    result = robot.command_cartesian_pose(
+        T_left=None,
+        T_right=T_right[0],
+        T_torso=T_torso[0],
+    )
+    if not result:
+        print("Start pose reached.")
     time.sleep(1)
+
+    print("Running trajectory.")
+    result, T_true_left, T_true_right, T_true_torso = robot.command_optimal_trajectory(
+        time_out * 2,
+        T_left=None,
+        T_right=T_right,
+        T_torso=T_torso,
+    )
+    if not result:
+        print("Trajectory finished.")
+    time.sleep(1)
+
+    pos_des_right = T_right[:, :3, 3]
+    pos_true_right = T_true_right[:, :3, 3]
+
+    fig = plt.figure(figsize=(12, 8))
+    gs = fig.add_gridspec(4, 2)
+    ax0 = fig.add_subplot(gs[0, 0])
+    ax1 = fig.add_subplot(gs[1, 0])
+    ax2 = fig.add_subplot(gs[2, 0])
+    ax3 = fig.add_subplot(gs[0, 1])
+    ax4 = fig.add_subplot(gs[1, 1])
+    ax5 = fig.add_subplot(gs[2, 1])
+    ax6 = fig.add_subplot(gs[3, :])
+    ax0.plot(time_out, pos_des_right[:, 0], label="Desired")
+    ax1.plot(time_out, pos_des_right[:, 1], label="Desired")
+    ax2.plot(time_out, pos_des_right[:, 2], label="Desired")
+    ax0.plot(time_out, pos_true_right[:, 0], label="True")
+    ax1.plot(time_out, pos_true_right[:, 1], label="True")
+    ax2.plot(time_out, pos_true_right[:, 2], label="True")
+    ax0.set_title("X trajectories")
+    ax1.set_title("Y trajectories")
+    ax2.set_title("Z trajectories")
+    ax0.legend()
+    ax1.legend()
+    ax2.legend()
+    ax3.plot(time_out, pos_des_right[:, 0] - pos_true_right[:, 0])
+    ax4.plot(time_out, pos_des_right[:, 1] - pos_true_right[:, 1])
+    ax5.plot(time_out, pos_des_right[:, 2] - pos_true_right[:, 2])
+    ax3.set_title("X error")
+    ax4.set_title("Y error")
+    ax5.set_title("Z error")
+    ax6.plot(time_out, np.linalg.norm(pos_des_right - pos_true_right, axis=1))
+    ax6.set_title("Total error")
+    fig.savefig("scooping_powder_tracking_error.png")
 
     if not robot.reset_pose():
         print("Pose reset.")
@@ -626,3 +671,74 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     follow_trajectory(args.address, args.device, args.servo)
+
+# # Scale trajectory
+# scale_factor = 2 / 3
+# mean = np.mean(pos_robot_to_left_gripper_R, axis=0)
+# pos_robot_to_left_gripper_R = (
+#     scale_factor * (pos_robot_to_left_gripper_R - mean) + mean
+# )
+
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection="3d")
+
+# for link in robot.links:
+#     T = robot.get_pose("base", link)
+#     for i in range(3):
+#         color = ["red", "green", "blue"][i]
+#         ax.quiver(
+#             T[:3, 3][0],
+#             T[:3, 3][1],
+#             T[:3, 3][2],
+#             T[:3, :3][0, i],
+#             T[:3, :3][1, i],
+#             T[:3, :3][2, i],
+#             color=color,
+#             length=0.1,
+#         )
+
+# ax.set_xlabel("X")
+# ax.set_ylabel("Y")
+# ax.set_zlabel("Z")
+# ax.set_aspect("equal")
+# fig.savefig("init.png")
+
+# # Generate animation
+# fig = plt.figure()
+# ax = fig.add_subplot(111, projection="3d")
+# azim_min = 30
+# azim_max = 30
+
+# def update(frame):
+#     frame = frame * 10
+#     ax.clear()
+
+#     for i in range(3):
+#         color = ["red", "green", "blue"][i]
+#         ax.quiver(
+#             pos_robot_to_left_gripper_R_interp[frame, 0],
+#             pos_robot_to_left_gripper_R_interp[frame, 1],
+#             pos_robot_to_left_gripper_R_interp[frame, 2],
+#             rot_robot_to_left_gripper_interp[frame, 0, i],
+#             rot_robot_to_left_gripper_interp[frame, 1, i],
+#             rot_robot_to_left_gripper_interp[frame, 2, i],
+#             color=color,
+#             length=0.1,
+#         )
+
+#     # Timestamp & bounds
+#     ax.set_title(f"t = {time_out[frame]:.3f}s")
+#     ax.set_xlim([0.2, 0.7])
+#     ax.set_ylim([0.0, 0.5])
+#     ax.set_zlim([0.5, 1.0])
+#     ax.set_xlabel("X")
+#     ax.set_ylabel("Y")
+#     ax.set_zlabel("Z")
+#     angle = azim_min + (azim_max - azim_min) * frame / len(time_out)
+#     ax.view_init(elev=25, azim=angle)
+
+# interval_s = (time_out[-1] - time_out[0]) / (len(time_out) + 1) * 10
+# ani = FuncAnimation(
+#     fig, update, frames=len(time_out) // 10, interval=1000 * interval_s
+# )
+# ani.save("traj.gif")
