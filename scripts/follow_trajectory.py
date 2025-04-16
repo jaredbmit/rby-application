@@ -30,7 +30,8 @@ STOP_POSITION_TRACKING_ERROR = 1e-5
 
 # Stirring & Pouring Control Presets
 WEIGHT = 0.01
-CENTERING_WEIGHT = WEIGHT / 100
+CENTERING_WEIGHT = 0.0001
+BODY_CENTERING_WEIGHT = 0.001
 STOP_COST = 1e-2
 VELOCITY_LIMIT_SCALE = 1.0
 VELOCITY_TRACKING_GAIN = 0.01
@@ -45,22 +46,40 @@ CONTROL_HOLD_TIME = 300
 #     * D2R
 # )
 
+BEND_ANGLE = 5
 Q_HOME = (
     np.array(
-        [0, 30, -60, 30, 0, 0, 15, -15, 0, -90, 0, 15, 0, 15, 15, 0, -90, 0, 15, 0]
+        [
+            0,
+            BEND_ANGLE,
+            -2 * BEND_ANGLE,
+            BEND_ANGLE,
+            0,
+            0,
+            15,
+            -15,
+            0,
+            -90,
+            0,
+            15,
+            90,
+            15,
+            15,
+            0,
+            -90,
+            0,
+            15,
+            -90,
+        ]
     )
     * D2R
 )
 
 
 def interpolate_trajectory(time_in, time_out, pose):
-    interpolate_position = interpolate.interp1d(
-        time_in, pose[:, :3, 3], axis=0
-    )
+    interpolate_position = interpolate.interp1d(time_in, pose[:, :3, 3], axis=0)
     position = interpolate_position(time_out)
-    interpolate_rotation = tf.Slerp(
-        time_in, tf.Rotation.from_matrix(pose[:, :3, :3])
-    )
+    interpolate_rotation = tf.Slerp(time_in, tf.Rotation.from_matrix(pose[:, :3, :3]))
     rotation = interpolate_rotation(time_out).as_matrix()
 
     T = np.zeros((len(time_out), 4, 4))
@@ -227,26 +246,26 @@ class Rainbow:
                 .set_command_header(
                     sdk.CommandHeaderBuilder().set_control_hold_time(CONTROL_HOLD_TIME)
                 )
-                .add_joint_position_target("torso_0", 0.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("torso_1", 30.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("torso_2", -60.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("torso_3", 30.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("torso_4", 0.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("torso_5", 0.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("left_arm_0", 15.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("left_arm_1", 15.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("left_arm_2", 0.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("left_arm_3", -90.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("left_arm_4", 0.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("left_arm_5", 15.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("left_arm_6", 0.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("right_arm_0", 15.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("right_arm_1", -15.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("right_arm_2", 0.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("right_arm_3", -90.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("right_arm_4", 0.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("right_arm_5", 15.0 * D2R, CENTERING_WEIGHT)
-                .add_joint_position_target("right_arm_6", 0.0 * D2R, CENTERING_WEIGHT)
+                .add_joint_position_target("torso_0", Q_HOME[0], BODY_CENTERING_WEIGHT)
+                .add_joint_position_target("torso_1", Q_HOME[1], BODY_CENTERING_WEIGHT)
+                .add_joint_position_target("torso_2", Q_HOME[2], BODY_CENTERING_WEIGHT)
+                .add_joint_position_target("torso_3", Q_HOME[3], BODY_CENTERING_WEIGHT)
+                .add_joint_position_target("torso_4", Q_HOME[4], BODY_CENTERING_WEIGHT)
+                .add_joint_position_target("torso_5", Q_HOME[5], BODY_CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_0", Q_HOME[6], CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_1", Q_HOME[7], CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_2", Q_HOME[8], CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_3", Q_HOME[9], CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_4", Q_HOME[10], CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_5", Q_HOME[11], CENTERING_WEIGHT)
+                .add_joint_position_target("right_arm_6", Q_HOME[12], CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_0", Q_HOME[13], CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_1", Q_HOME[14], CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_2", Q_HOME[15], CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_3", Q_HOME[16], CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_4", Q_HOME[17], CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_5", Q_HOME[18], CENTERING_WEIGHT)
+                .add_joint_position_target("left_arm_6", Q_HOME[19], CENTERING_WEIGHT)
                 .set_velocity_limit_scaling(VELOCITY_LIMIT_SCALE)
                 .set_velocity_tracking_gain(VELOCITY_TRACKING_GAIN)
                 .set_stop_cost(STOP_COST)
@@ -400,7 +419,7 @@ def follow_trajectory(address, power_device, servo):
     # print("Done.")
 
     trajectory_file = os.path.expanduser(
-        "~/data/human/pouring/pouring_processed.hdf5"
+        "~/drl/human/data/2025-04-06/pouring/pouring_processed.hdf5"
     )
 
     with h5py.File(trajectory_file, "r") as f:
@@ -413,7 +432,7 @@ def follow_trajectory(address, power_device, servo):
 
     # Constants
     rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
-    rot_right_hand_to_right_gripper = np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]])
+    rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
     pos_right_hand_to_right_gripper_RG = np.zeros(3)
 
     # Rotation trajectory
