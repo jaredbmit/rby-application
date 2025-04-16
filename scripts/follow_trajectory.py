@@ -33,7 +33,7 @@ WEIGHT = 0.01
 CENTERING_WEIGHT = WEIGHT / 100
 STOP_COST = 1e-2
 VELOCITY_LIMIT_SCALE = 1.0
-VELOCITY_TRACKING_GAIN = 0.1
+VELOCITY_TRACKING_GAIN = 0.01
 MIN_DELTA_COST = 1e-4
 PATIENCE = 10
 CONTROL_HOLD_TIME = 300
@@ -207,7 +207,7 @@ class Rainbow:
             (np.ndarray): (n, 4, 4) True pose sequence for the torso end.
         """
         duration = int(max(t)) + 1
-        stream = self.robot.create_command_stream(10 * duration)
+        stream = self.robot.create_command_stream(duration)
 
         T_true_left = []
         T_true_right = []
@@ -463,19 +463,19 @@ def follow_trajectory(address, power_device, servo):
 
     # Command starting pose
     print("Navigating to start pose.")
-    time_mini = np.arange(0, 2.0, dt)
+    time_mini = np.arange(0, 1, dt)
     T_right_init = robot.get_pose("base", "ee_right")
     T_right_mini = np.stack([T_right_init, T_right[0]])
     T_right_mini_interp = interpolate_trajectory([0, 1], time_mini, T_right_mini)
     result, _, _, _ = robot.command_optimal_trajectory(
-        time_mini,
+        time_mini * 3,
         T_left=None,
         T_right=T_right_mini_interp,
         T_torso=None,
     )
     if not result:
         print("Start pose reached.")
-    time.sleep(1)
+    time.sleep(2)
 
     print("Running trajectory.")
     result, T_true_left, T_true_right, T_true_torso = robot.command_optimal_trajectory(
