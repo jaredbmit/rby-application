@@ -28,16 +28,6 @@ STOP_POSITION_TRACKING_ERROR = 1e-5
 # WEIGHT = 0.01
 # VELOCITY_TRACKING_GAIN = 0.01
 
-# # Scooping Powder Control Presets
-# WEIGHT = 1.0
-# CENTERING_WEIGHT = WEIGHT / 500
-# STOP_COST = 1e-2
-# VELOCITY_LIMIT_SCALE = 1.0
-# VELOCITY_TRACKING_GAIN = 0.1
-# MIN_DELTA_COST = 1e-4
-# PATIENCE = 10
-# CONTROL_HOLD_TIME = 300
-
 # Stirring & Pouring Control Presets
 WEIGHT = 0.01
 CENTERING_WEIGHT = WEIGHT / 100
@@ -63,27 +53,22 @@ Q_HOME = (
 )
 
 
-def schedule_weight(factor, nominal_weight):
-    """
-    Schedules control policy weighting to include pre- and post- ramping behavior
-    This is to mitigate torque impulses at trajectory bookends.
+def interpolate_trajectory(time_in, time_out, pose):
+    interpolate_position = interpolate.interp1d(
+        time_in, pose[:, :3, 3], axis=0
+    )
+    position = interpolate_position(time_out)
+    interpolate_rotation = tf.Slerp(
+        time_in, tf.Rotation.from_matrix(pose[:, :3, :3])
+    )
+    rotation = interpolate_rotation(time_out).as_matrix()
 
-    Args:
-        factor (float): Proportion of time already passed. Should be in [0, 1].
-        nominal_weight (float): The nominal weight value. Positive.
+    T = np.zeros((len(time_out), 4, 4))
+    T[:, :3, :3] = rotation
+    T[:, :3, 3] = position
+    T[:, 3, 3] = 1
 
-    Returns:
-        weight (float): Scheduled weight.
-    """
-    if 0 <= factor <= 0.1:
-        weight = 10 * factor * nominal_weight
-    elif 0.1 < factor < 0.9:
-        weight = nominal_weight
-    elif 0.9 <= factor <= 1:
-        weight = 10 * (1.0 - factor) * nominal_weight
-    else:
-        return ValueError("`factor` must be in [0, 1].")
-    return weight
+    return T
 
 
 class Rainbow:
@@ -230,12 +215,9 @@ class Rainbow:
 
         for i in range(len(t) - 1):
 
-            T_true_left.append(self.get_pose("base", "ee_left"))
-            T_true_right.append(self.get_pose("base", "ee_right"))
-            T_true_torso.append(self.get_pose("base", "link_torso_5"))
-
-            time_factor = t[i] / max(t)
-            weight = schedule_weight(time_factor, WEIGHT)
+            # T_true_left.append(self.get_pose("base", "ee_left"))
+            # T_true_right.append(self.get_pose("base", "ee_right"))
+            # T_true_torso.append(self.get_pose("base", "link_torso_5"))
 
             dt = float(t[i + 1] - t[i])
 
@@ -274,17 +256,17 @@ class Rainbow:
 
             if T_left is not None:
                 optimal_command = optimal_command.add_cartesian_target(
-                    "base", "ee_left", T_left[i + 1], weight, weight
+                    "base", "ee_left", T_left[i + 1], WEIGHT, WEIGHT
                 )
 
             if T_right is not None:
                 optimal_command = optimal_command.add_cartesian_target(
-                    "base", "ee_right", T_right[i + 1], weight, weight
+                    "base", "ee_right", T_right[i + 1], WEIGHT, WEIGHT
                 )
 
             if T_torso is not None:
                 optimal_command = optimal_command.add_cartesian_target(
-                    "base", "link_torso_5", T_torso[i + 1], weight, weight
+                    "base", "link_torso_5", T_torso[i + 1], WEIGHT, WEIGHT
                 )
 
             rc = sdk.RobotCommandBuilder().set_command(
@@ -307,9 +289,9 @@ class Rainbow:
             print("Control finish unknown.")
         elif rv.finish_code != sdk.RobotCommandFeedback.FinishCode.Ok:
             print("Error: Failed to conduct demo motion.")
-            return 1, T_true_left, T_true_right, T_torso
+            return 1, T_true_left, T_true_right, T_true_torso
 
-        return 0, T_true_left, T_true_right, T_torso
+        return 0, T_true_left, T_true_right, T_true_torso
 
 
 def follow_trajectory(address, power_device, servo):
@@ -418,7 +400,7 @@ def follow_trajectory(address, power_device, servo):
     # print("Done.")
 
     trajectory_file = os.path.expanduser(
-        "~/drl/human/data/2025-04-06/pouring/pouring_processed.hdf5"
+        "~/data/human/pouring/pouring_processed.hdf5"
     )
 
     with h5py.File(trajectory_file, "r") as f:
@@ -461,24 +443,18 @@ def follow_trajectory(address, power_device, servo):
         + pos_right_hand_to_right_gripper_R
     )
 
+    # Form pose trajectories
+    T_right = np.zeros((len(t), 4, 4))
+    T_right[:, :3, :3] = rot_robot_to_right_gripper
+    T_right[:, :3, 3] = pos_robot_to_right_gripper_R
+    T_right[:, 3, 3] = 1
+
     # Re-interpolate
     dt = 0.01
-    time_in = t
-    time_out = np.arange(0, np.max(time_in), dt)
-    interpolate_position = interpolate.interp1d(
-        time_in, pos_robot_to_right_gripper_R, axis=0
-    )
-    pos_robot_to_right_gripper_R_interp = interpolate_position(time_out)
-    interpolate_rotation = tf.Slerp(
-        time_in, tf.Rotation.from_matrix(rot_robot_to_right_gripper)
-    )
-    rot_robot_to_right_gripper_interp = interpolate_rotation(time_out).as_matrix()
+    time_out = np.arange(0, np.max(t), dt)
+    T_right_interp = interpolate_trajectory(t, time_out, T_right)
 
-    # Construct pose sequences
-    T_right = np.zeros((len(time_out), 4, 4))
-    T_right[:, :3, :3] = rot_robot_to_right_gripper_interp
-    T_right[:, :3, 3] = pos_robot_to_right_gripper_R_interp
-    T_right[:, 3, 3] = 1
+    # Torso static trajectory
     T_torso = np.repeat(
         robot.get_pose("base", "link_torso_5")[np.newaxis, ...],
         repeats=len(time_out),
@@ -487,11 +463,14 @@ def follow_trajectory(address, power_device, servo):
 
     # Command starting pose
     print("Navigating to start pose.")
+    time_mini = np.arange(0, 2.0, dt)
     T_right_init = robot.get_pose("base", "ee_right")
+    T_right_mini = np.stack([T_right_init, T_right[0]])
+    T_right_mini_interp = interpolate_trajectory([0, 1], time_mini, T_right_mini)
     result, _, _, _ = robot.command_optimal_trajectory(
-        [0, 1],
+        time_mini,
         T_left=None,
-        T_right=[T_right_init, T_right[0]],
+        T_right=T_right_mini_interp,
         T_torso=None,
     )
     if not result:
@@ -502,7 +481,7 @@ def follow_trajectory(address, power_device, servo):
     result, T_true_left, T_true_right, T_true_torso = robot.command_optimal_trajectory(
         time_out * 2,
         T_left=None,
-        T_right=T_right,
+        T_right=T_right_interp,
         T_torso=T_torso,
     )
     if not result:
