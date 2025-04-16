@@ -28,25 +28,25 @@ STOP_POSITION_TRACKING_ERROR = 1e-5
 # WEIGHT = 0.01
 # VELOCITY_TRACKING_GAIN = 0.01
 
-# Scooping Powder Control Presets
-WEIGHT = 1.0
-CENTERING_WEIGHT = WEIGHT / 500
-STOP_COST = 1e-2
-VELOCITY_LIMIT_SCALE = 1.0
-VELOCITY_TRACKING_GAIN = 0.1
-MIN_DELTA_COST = 1e-4
-PATIENCE = 10
-CONTROL_HOLD_TIME = 300
-
-# # Stirring Control Presets
+# # Scooping Powder Control Presets
 # WEIGHT = 1.0
-# CENTERING_WEIGHT = WEIGHT / 2000
+# CENTERING_WEIGHT = WEIGHT / 500
 # STOP_COST = 1e-2
 # VELOCITY_LIMIT_SCALE = 1.0
 # VELOCITY_TRACKING_GAIN = 0.1
 # MIN_DELTA_COST = 1e-4
 # PATIENCE = 10
 # CONTROL_HOLD_TIME = 300
+
+# Stirring & Pouring Control Presets
+WEIGHT = 0.01
+CENTERING_WEIGHT = WEIGHT / 100
+STOP_COST = 1e-2
+VELOCITY_LIMIT_SCALE = 1.0
+VELOCITY_TRACKING_GAIN = 0.1
+MIN_DELTA_COST = 1e-4
+PATIENCE = 10
+CONTROL_HOLD_TIME = 300
 
 # Q_HOME = (
 #     np.array(
@@ -194,76 +194,6 @@ class Rainbow:
 
         return 0
 
-    def command_cartesian_pose(
-        self,
-        T_left: Optional[np.ndarray],
-        T_right: Optional[np.ndarray],
-        T_torso: Optional[np.ndarray],
-    ):
-        """
-        Commands a trajectory for the 3 main body components
-        using RB-Y1's optimal controller.'
-
-        Args:
-            T_left (np.ndarray): (4, 4) Pose for the left end effector.
-            T_right (np.ndarray): (4, 4) Pose for the right end effector.
-            T_torso (np.ndarray): (4, 4) Pose for the torso.
-
-        Returns:
-            (int): 1 if failure, 0 if success or unknown.
-        """
-        cartesian_command = (
-            sdk.CartesianCommandBuilder()
-            .set_minimum_time(MINIMUM_TIME)
-            .set_stop_orientation_tracking_error(STOP_ORIENTATION_TRACKING_ERROR)
-            .set_stop_position_tracking_error(STOP_POSITION_TRACKING_ERROR)
-        )
-
-        if T_left is not None:
-            cartesian_command.add_target(
-                "base",
-                "ee_left",
-                T_left,
-                LINEAR_VELOCITY_LIMIT,
-                ANGULAR_VELOCITY_LIMIT,
-                ACCELERATION_LIMIT,
-            )
-
-        if T_right is not None:
-            cartesian_command.add_target(
-                "base",
-                "ee_right",
-                T_right,
-                LINEAR_VELOCITY_LIMIT,
-                ANGULAR_VELOCITY_LIMIT,
-                ACCELERATION_LIMIT,
-            )
-
-        if T_torso is not None:
-            cartesian_command.add_target(
-                "base",
-                "link_torso_5",
-                T_torso,
-                LINEAR_VELOCITY_LIMIT,
-                ANGULAR_VELOCITY_LIMIT,
-                ACCELERATION_LIMIT,
-            )
-
-        rc = sdk.RobotCommandBuilder().set_command(
-            sdk.ComponentBasedCommandBuilder().set_body_command(cartesian_command)
-        )
-
-        rv = self.robot.send_command(rc, 10).get()
-
-        if rv.finish_code == sdk.RobotCommandFeedback.FinishCode.Unknown:
-            print("Control finish unknown.")
-            return 0
-        elif rv.finish_code != sdk.RobotCommandFeedback.FinishCode.Ok:
-            print("Error: Failed to conduct demo motion.")
-            return 1
-
-        return 0
-
     def command_optimal_trajectory(
         self,
         t: np.ndarray,
@@ -365,13 +295,13 @@ class Rainbow:
 
             time.sleep(dt)
 
-        T_true_left.append(self.get_pose("base", "ee_left"))
-        T_true_right.append(self.get_pose("base", "ee_right"))
-        T_true_torso.append(self.get_pose("base", "link_torso_5"))
+        # T_true_left.append(self.get_pose("base", "ee_left"))
+        # T_true_right.append(self.get_pose("base", "ee_right"))
+        # T_true_torso.append(self.get_pose("base", "link_torso_5"))
 
-        T_true_left = np.array(T_true_left)
-        T_true_right = np.array(T_true_right)
-        T_true_torso = np.array(T_true_torso)
+        # T_true_left = np.array(T_true_left)
+        # T_true_right = np.array(T_true_right)
+        # T_true_torso = np.array(T_true_torso)
 
         if rv.finish_code == sdk.RobotCommandFeedback.FinishCode.Unknown:
             print("Control finish unknown.")
@@ -482,47 +412,13 @@ def follow_trajectory(address, power_device, servo):
     #     print("Trajectory finished.")
     # time.sleep(1)
 
-    # pos_des_left = T_left[:, :3, 3]
-    # pos_true_left = T_true_left[:, :3, 3]
-
-    # fig = plt.figure(figsize=(12, 8))
-    # gs = fig.add_gridspec(4, 2)
-    # ax0 = fig.add_subplot(gs[0, 0])
-    # ax1 = fig.add_subplot(gs[1, 0])
-    # ax2 = fig.add_subplot(gs[2, 0])
-    # ax3 = fig.add_subplot(gs[0, 1])
-    # ax4 = fig.add_subplot(gs[1, 1])
-    # ax5 = fig.add_subplot(gs[2, 1])
-    # ax6 = fig.add_subplot(gs[3, :])
-    # ax0.plot(time_out, pos_des_left[:, 0], label="Desired")
-    # ax1.plot(time_out, pos_des_left[:, 1], label="Desired")
-    # ax2.plot(time_out, pos_des_left[:, 2], label="Desired")
-    # ax0.plot(time_out, pos_true_left[:, 0], label="True")
-    # ax1.plot(time_out, pos_true_left[:, 1], label="True")
-    # ax2.plot(time_out, pos_true_left[:, 2], label="True")
-    # ax0.set_title("X trajectories")
-    # ax1.set_title("Y trajectories")
-    # ax2.set_title("Z trajectories")
-    # ax0.legend()
-    # ax1.legend()
-    # ax2.legend()
-    # ax3.plot(time_out, pos_des_left[:, 0] - pos_true_left[:, 0])
-    # ax4.plot(time_out, pos_des_left[:, 1] - pos_true_left[:, 1])
-    # ax5.plot(time_out, pos_des_left[:, 2] - pos_true_left[:, 2])
-    # ax3.set_title("X error")
-    # ax4.set_title("Y error")
-    # ax5.set_title("Z error")
-    # ax6.plot(time_out, np.linalg.norm(pos_des_left - pos_true_left, axis=1))
-    # ax6.set_title("Total error")
-    # fig.savefig("scooping_powder_tracking_error.png")
-
     # if not robot.reset_pose():
     #     print("Pose reset.")
 
     # print("Done.")
 
     trajectory_file = os.path.expanduser(
-        "~/drl/human/data/pouring/pouring_inference.hdf5"
+        "~/drl/human/data/2025-04-06/pouring/pouring_processed.hdf5"
     )
 
     with h5py.File(trajectory_file, "r") as f:
@@ -591,10 +487,12 @@ def follow_trajectory(address, power_device, servo):
 
     # Command starting pose
     print("Navigating to start pose.")
-    result = robot.command_cartesian_pose(
+    T_right_init = robot.get_pose("base", "ee_right")
+    result, _, _, _ = robot.command_optimal_trajectory(
+        [0, 1],
         T_left=None,
-        T_right=T_right[0],
-        T_torso=T_torso[0],
+        T_right=[T_right_init, T_right[0]],
+        T_torso=None,
     )
     if not result:
         print("Start pose reached.")
@@ -610,40 +508,6 @@ def follow_trajectory(address, power_device, servo):
     if not result:
         print("Trajectory finished.")
     time.sleep(1)
-
-    pos_des_right = T_right[:, :3, 3]
-    pos_true_right = T_true_right[:, :3, 3]
-
-    fig = plt.figure(figsize=(12, 8))
-    gs = fig.add_gridspec(4, 2)
-    ax0 = fig.add_subplot(gs[0, 0])
-    ax1 = fig.add_subplot(gs[1, 0])
-    ax2 = fig.add_subplot(gs[2, 0])
-    ax3 = fig.add_subplot(gs[0, 1])
-    ax4 = fig.add_subplot(gs[1, 1])
-    ax5 = fig.add_subplot(gs[2, 1])
-    ax6 = fig.add_subplot(gs[3, :])
-    ax0.plot(time_out, pos_des_right[:, 0], label="Desired")
-    ax1.plot(time_out, pos_des_right[:, 1], label="Desired")
-    ax2.plot(time_out, pos_des_right[:, 2], label="Desired")
-    ax0.plot(time_out, pos_true_right[:, 0], label="True")
-    ax1.plot(time_out, pos_true_right[:, 1], label="True")
-    ax2.plot(time_out, pos_true_right[:, 2], label="True")
-    ax0.set_title("X trajectories")
-    ax1.set_title("Y trajectories")
-    ax2.set_title("Z trajectories")
-    ax0.legend()
-    ax1.legend()
-    ax2.legend()
-    ax3.plot(time_out, pos_des_right[:, 0] - pos_true_right[:, 0])
-    ax4.plot(time_out, pos_des_right[:, 1] - pos_true_right[:, 1])
-    ax5.plot(time_out, pos_des_right[:, 2] - pos_true_right[:, 2])
-    ax3.set_title("X error")
-    ax4.set_title("Y error")
-    ax5.set_title("Z error")
-    ax6.plot(time_out, np.linalg.norm(pos_des_right - pos_true_right, axis=1))
-    ax6.set_title("Total error")
-    fig.savefig("scooping_powder_tracking_error.png")
 
     if not robot.reset_pose():
         print("Pose reset.")
@@ -671,74 +535,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     follow_trajectory(args.address, args.device, args.servo)
-
-# # Scale trajectory
-# scale_factor = 2 / 3
-# mean = np.mean(pos_robot_to_left_gripper_R, axis=0)
-# pos_robot_to_left_gripper_R = (
-#     scale_factor * (pos_robot_to_left_gripper_R - mean) + mean
-# )
-
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection="3d")
-
-# for link in robot.links:
-#     T = robot.get_pose("base", link)
-#     for i in range(3):
-#         color = ["red", "green", "blue"][i]
-#         ax.quiver(
-#             T[:3, 3][0],
-#             T[:3, 3][1],
-#             T[:3, 3][2],
-#             T[:3, :3][0, i],
-#             T[:3, :3][1, i],
-#             T[:3, :3][2, i],
-#             color=color,
-#             length=0.1,
-#         )
-
-# ax.set_xlabel("X")
-# ax.set_ylabel("Y")
-# ax.set_zlabel("Z")
-# ax.set_aspect("equal")
-# fig.savefig("init.png")
-
-# # Generate animation
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection="3d")
-# azim_min = 30
-# azim_max = 30
-
-# def update(frame):
-#     frame = frame * 10
-#     ax.clear()
-
-#     for i in range(3):
-#         color = ["red", "green", "blue"][i]
-#         ax.quiver(
-#             pos_robot_to_left_gripper_R_interp[frame, 0],
-#             pos_robot_to_left_gripper_R_interp[frame, 1],
-#             pos_robot_to_left_gripper_R_interp[frame, 2],
-#             rot_robot_to_left_gripper_interp[frame, 0, i],
-#             rot_robot_to_left_gripper_interp[frame, 1, i],
-#             rot_robot_to_left_gripper_interp[frame, 2, i],
-#             color=color,
-#             length=0.1,
-#         )
-
-#     # Timestamp & bounds
-#     ax.set_title(f"t = {time_out[frame]:.3f}s")
-#     ax.set_xlim([0.2, 0.7])
-#     ax.set_ylim([0.0, 0.5])
-#     ax.set_zlim([0.5, 1.0])
-#     ax.set_xlabel("X")
-#     ax.set_ylabel("Y")
-#     ax.set_zlabel("Z")
-#     angle = azim_min + (azim_max - azim_min) * frame / len(time_out)
-#     ax.view_init(elev=25, azim=angle)
-
-# interval_s = (time_out[-1] - time_out[0]) / (len(time_out) + 1) * 10
-# ani = FuncAnimation(
-#     fig, update, frames=len(time_out) // 10, interval=1000 * interval_s
-# )
-# ani.save("traj.gif")
