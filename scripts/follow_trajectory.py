@@ -29,7 +29,7 @@ STOP_POSITION_TRACKING_ERROR = 1e-5
 # VELOCITY_TRACKING_GAIN = 0.01
 
 # Stirring & Pouring Control Presets
-WEIGHT = 0.01
+WEIGHT = 0.015
 CENTERING_WEIGHT = 0.0001
 BODY_CENTERING_WEIGHT = 0.001
 STOP_COST = 1e-2
@@ -56,20 +56,20 @@ Q_HOME = (
             BEND_ANGLE,
             0,
             0,
-            15,
+            -30,
             -15,
-            0,
-            -90,
-            0,
+            -10,
+            -105,
+            30,
+            45,
+            60,
+            -30,
             15,
-            90,
-            15,
-            15,
-            0,
-            -90,
-            0,
-            15,
-            -90,
+            10,
+            -105,
+            -30,
+            45,
+            -60,
         ]
     )
     * D2R
@@ -423,21 +423,47 @@ def follow_trajectory(address, power_device, servo):
     )
 
     with h5py.File(trajectory_file, "r") as f:
-        trajectory = f["trajectory_000"]["data"]
-        t = np.array(trajectory["time"])
-        pos_human_to_right_hand_H = np.array(trajectory["pos_human_to_right_hand_H"])
-        rot_human_to_right_hand = np.array(
-            trajectory["rot_human_to_right_hand"]
-        ).reshape((-1, 3, 3))
+        trajectory = f["trajectory_000"]
+        data = trajectory["data"]
+        ref = trajectory["reference"]
+        t = np.array(data["time"])
+        pos_human_to_right_hand_H = np.array(data["pos_human_to_right_hand_H"])
+        rot_human_to_right_hand = np.array(data["rot_human_to_right_hand"]).reshape(
+            (-1, 3, 3)
+        )
+        pos_human_to_glass_rim_H = np.array(ref["pos_human_to_glass_rim_H"])
 
     # Constants
     rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
     rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
     pos_right_hand_to_right_gripper_RG = np.zeros(3)
+    rot_left_hand_to_left_gripper = np.eye(3)  # TODO
+    pos_left_hand_to_left_gripper_LG = np.zeros(3)
 
-    # Rotation trajectory
+    # Right gripper rotation trajectory
     rot_robot_to_right_gripper = (
         rot_robot_to_human @ rot_human_to_right_hand @ rot_right_hand_to_right_gripper
+    )
+
+    # Left gripper rotation trajectory
+    # rot_robot_to_left_gripper_init = robot.get_pose("base", "ee_left")[:3, :3]
+    # rot_robot_to_left_gripper = np.repeat(
+    #     rot_robot_to_left_gripper_init[np.newaxis, ...],
+    #     repeats=len(t),
+    #     axis=0,
+    # )
+    theta = np.pi / 12
+    rot_robot_to_left_gripper_base = np.array(
+        [
+            [-np.sin(theta), 0, -np.cos(theta)],
+            [-np.cos(theta), 0, np.sin(theta)],
+            [0, 1, 0],
+        ]
+    )
+    rot_robot_to_left_gripper = np.repeat(
+        rot_robot_to_left_gripper_base[np.newaxis, ...],
+        repeats=len(t),
+        axis=0,
     )
 
     # Static position relations
@@ -449,7 +475,7 @@ def follow_trajectory(address, power_device, servo):
         - pos_human_to_right_hand_init_R
     )
 
-    # Position trajectory
+    # Right gripper position trajectory
     pos_human_to_right_hand_R = (
         rot_robot_to_human @ pos_human_to_right_hand_H.reshape((-1, 3, 1))
     ).reshape((-1, 3))
@@ -462,16 +488,41 @@ def follow_trajectory(address, power_device, servo):
         + pos_right_hand_to_right_gripper_R
     )
 
+    # Left gripper position trajectory
+    pos_human_to_left_hand_H = np.repeat(
+        pos_human_to_glass_rim_H[np.newaxis, ...],
+        repeats=len(t),
+        axis=0,
+    )
+    pos_human_to_left_hand_R = (
+        rot_robot_to_human @ pos_human_to_left_hand_H.reshape((-1, 3, 1))
+    ).reshape((-1, 3))
+    pos_left_hand_to_left_gripper_R = (
+        rot_robot_to_left_gripper @ pos_left_hand_to_left_gripper_LG
+    )
+    pos_robot_to_left_gripper_R = (
+        pos_robot_to_human_R
+        + pos_human_to_left_hand_R
+        + pos_left_hand_to_left_gripper_R
+        - np.array([0, 0, 0.1])  # Bottom of glass
+        + np.array([-0.05, 0.02, 0])
+    )
+
     # Form pose trajectories
     T_right = np.zeros((len(t), 4, 4))
     T_right[:, :3, :3] = rot_robot_to_right_gripper
     T_right[:, :3, 3] = pos_robot_to_right_gripper_R
     T_right[:, 3, 3] = 1
+    T_left = np.zeros((len(t), 4, 4))
+    T_left[:, :3, :3] = rot_robot_to_left_gripper
+    T_left[:, :3, 3] = pos_robot_to_left_gripper_R
+    T_left[:, 3, 3] = 1
 
     # Re-interpolate
     dt = 0.01
     time_out = np.arange(0, np.max(t), dt)
     T_right_interp = interpolate_trajectory(t, time_out, T_right)
+    T_left_interp = interpolate_trajectory(t, time_out, T_left)
 
     # Torso static trajectory
     T_torso = np.repeat(
@@ -486,11 +537,19 @@ def follow_trajectory(address, power_device, servo):
     T_right_init = robot.get_pose("base", "ee_right")
     T_right_mini = np.stack([T_right_init, T_right[0]])
     T_right_mini_interp = interpolate_trajectory([0, 1], time_mini, T_right_mini)
+    T_left_init = robot.get_pose("base", "ee_left")
+    T_left_mini = np.stack([T_left_init, T_left[0]])
+    T_left_mini_interp = interpolate_trajectory([0, 1], time_mini, T_left_mini)
+    T_torso_mini = np.repeat(
+        robot.get_pose("base", "link_torso_5")[np.newaxis, ...],
+        repeats=len(time_mini),
+        axis=0,
+    )
     result, _, _, _ = robot.command_optimal_trajectory(
         time_mini * 3,
-        T_left=None,
+        T_left=T_left_mini_interp,
         T_right=T_right_mini_interp,
-        T_torso=None,
+        T_torso=T_torso_mini,
     )
     if not result:
         print("Start pose reached.")
@@ -499,7 +558,7 @@ def follow_trajectory(address, power_device, servo):
     print("Running trajectory.")
     result, T_true_left, T_true_right, T_true_torso = robot.command_optimal_trajectory(
         time_out * 2,
-        T_left=None,
+        T_left=T_left_interp,
         T_right=T_right_interp,
         T_torso=T_torso,
     )
