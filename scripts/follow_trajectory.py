@@ -24,12 +24,9 @@ ANGULAR_VELOCITY_LIMIT = np.pi * 1.5
 ACCELERATION_LIMIT = 1.0
 STOP_ORIENTATION_TRACKING_ERROR = 1e-5
 STOP_POSITION_TRACKING_ERROR = 1e-5
-# WEIGHT = 0.0015
-# WEIGHT = 0.01
-# VELOCITY_TRACKING_GAIN = 0.01
 
-# Stirring & Pouring Control Presets
-WEIGHT = 0.015
+# Optimal Controller Presets
+WEIGHT = 0.01
 CENTERING_WEIGHT = 0.0001
 BODY_CENTERING_WEIGHT = 0.001
 STOP_COST = 1e-2
@@ -56,20 +53,20 @@ Q_HOME = (
             BEND_ANGLE,
             0,
             0,
-            -30,
+            -15,
             -15,
             -10,
-            -105,
+            -95,
             30,
+            35,
             45,
-            60,
-            -30,
+            -15,
             15,
             10,
-            -105,
+            -95,
             -30,
-            45,
-            -60,
+            35,
+            -45,
         ]
     )
     * D2R
@@ -319,26 +316,37 @@ def follow_trajectory(address, power_device, servo):
     if not robot.reset_pose():
         print("Pose reset.")
 
-    # Load example trajectory
+    # T_right_init = np.array([[0.45826324, -0.0415582, -0.88784442, 0.48676827], 
+    #                          [0.88452268, 0.11939231, 0.4509602, -0.38339947], 
+    #                          [0.08726071, -0.99197701, 0.09147228, 1.16882506], 
+    #                          [0, 0, 0, 1]])
+
+    # # Load example trajectory
     # trajectory_file = os.path.expanduser(
-    #     "~/drl/human/data/stirring/stirring_inference.hdf5"
-    # )
-    # trajectory_file = os.path.expanduser(
-    #     "~/drl/human/data/scooping_powder/scooping_powder_inference.hdf5"
+    #     "~/data/human/scooping_powder/scooping_powder_processed.hdf5"
     # )
 
     # with h5py.File(trajectory_file, "r") as f:
-    #     trajectory = f["trajectory_000"]["data"]
-    #     t = np.array(trajectory["time"])
-    #     pos_human_to_left_hand_H = np.array(trajectory["pos_human_to_left_hand_H"])
-    #     rot_human_to_left_hand = np.array(trajectory["rot_human_to_left_hand"]).reshape(
+    #     trajectory = f["trajectory_000"]
+    #     data = trajectory["data"]
+    #     ref = trajectory["reference"]
+    #     t = np.array(data["time"])
+    #     pos_human_to_left_hand_H = np.array(data["pos_human_to_left_hand_H"])
+    #     rot_human_to_left_hand = np.array(data["rot_human_to_left_hand"]).reshape(
     #         (-1, 3, 3)
     #     )
+    #     pos_human_to_bowl_H = np.array(ref["pos_human_to_bowl_H"])
+    #     pos_human_to_pitcher_H = np.array(ref["pos_human_to_pitcher_H"])
+    #     theta_human_to_pitcher_H = np.array(ref["angle_human_to_pitcher"])
+
+    # print(robot.get_pose("base", "ee_left"))
 
     # # Constants
     # rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
-    # rot_left_hand_to_left_gripper = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
-    # pos_left_hand_to_left_gripper_LG = np.zeros(3)
+    # rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
+    # rot_left_hand_to_left_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
+    # pos_right_hand_to_right_gripper_RG = np.array([-0.065, -0.075, 0.08])
+    # pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
 
     # # Rotation trajectory
     # rot_robot_to_left_gripper = (
@@ -419,11 +427,13 @@ def follow_trajectory(address, power_device, servo):
     # print("Done.")
 
     trajectory_file = os.path.expanduser(
-        "~/drl/human/data/2025-04-06/pouring/pouring_processed.hdf5"
+        "~/data/human/pouring/pouring_processed.hdf5"
     )
 
+    # Traj videos: 0, 36, 42
+
     with h5py.File(trajectory_file, "r") as f:
-        trajectory = f["trajectory_000"]
+        trajectory = f["trajectory_042"]
         data = trajectory["data"]
         ref = trajectory["reference"]
         t = np.array(data["time"])
@@ -436,9 +446,9 @@ def follow_trajectory(address, power_device, servo):
     # Constants
     rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
     rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
-    pos_right_hand_to_right_gripper_RG = np.zeros(3)
+    pos_right_hand_to_right_gripper_RG = np.array([-0.065, -0.075, 0.08])
     rot_left_hand_to_left_gripper = np.eye(3)  # TODO
-    pos_left_hand_to_left_gripper_LG = np.zeros(3)
+    pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
 
     # Right gripper rotation trajectory
     rot_robot_to_right_gripper = (
@@ -468,10 +478,9 @@ def follow_trajectory(address, power_device, servo):
 
     # Static position relations
     pos_human_to_right_hand_init_R = rot_robot_to_human @ pos_human_to_right_hand_H[0]
-    pos_robot_to_right_gripper_init_R = robot.get_pose("base", "ee_right")[:3, 3]
+    pos_robot_to_right_gripper_init_R = T_right_init[:3, 3]
     pos_robot_to_human_R = (
         pos_robot_to_right_gripper_init_R
-        - rot_robot_to_right_gripper[0] @ pos_right_hand_to_right_gripper_RG
         - pos_human_to_right_hand_init_R
     )
 
@@ -486,6 +495,7 @@ def follow_trajectory(address, power_device, servo):
         pos_robot_to_human_R
         + pos_human_to_right_hand_R
         + pos_right_hand_to_right_gripper_R
+        + np.array([0, 0.1, 0])
     )
 
     # Left gripper position trajectory
@@ -504,8 +514,7 @@ def follow_trajectory(address, power_device, servo):
         pos_robot_to_human_R
         + pos_human_to_left_hand_R
         + pos_left_hand_to_left_gripper_R
-        - np.array([0, 0, 0.1])  # Bottom of glass
-        + np.array([-0.05, 0.02, 0])
+        + np.array([0, 0.1, -0.225])
     )
 
     # Form pose trajectories
@@ -557,7 +566,7 @@ def follow_trajectory(address, power_device, servo):
 
     print("Running trajectory.")
     result, T_true_left, T_true_right, T_true_torso = robot.command_optimal_trajectory(
-        time_out * 2,
+        time_out * 1.8,
         T_left=T_left_interp,
         T_right=T_right_interp,
         T_torso=T_torso,
@@ -566,8 +575,8 @@ def follow_trajectory(address, power_device, servo):
         print("Trajectory finished.")
     time.sleep(1)
 
-    if not robot.reset_pose():
-        print("Pose reset.")
+    # if not robot.reset_pose():
+    #     print("Pose reset.")
 
     print("Done.")
 
