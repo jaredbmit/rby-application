@@ -8,7 +8,7 @@ from typing import Optional
 import queue
 
 # Optimal Controller Presets
-WEIGHT = 0.02  # main parameter - higher will try to track better
+WEIGHT = 0.1  # main parameter - higher will try to track better
 CENTERING_WEIGHT = 0.0001
 BODY_CENTERING_WEIGHT = 0.001
 STOP_COST = 1e-2
@@ -60,15 +60,6 @@ class RainbowInterface:
         }
 
         self._setup(address, power_device, servo)
-
-    def set_home_position(self, q_home_position):
-        self._q_home_position = q_home_position
-
-    def set_home_pose(self, limb, q_home_pose):
-        self._q_home_pose[limb] = np.array(q_home_pose)
-
-    def get_home_pose(self, limb):
-        return self._q_home_pose[limb]
 
     def _setup(self, address, power_device, servo_device):
         print("Attempting to connect to the robot...")
@@ -126,8 +117,36 @@ class RainbowInterface:
             sdk.Model_A().robot_joint_names,
         )
 
+    def set_home_position(self, q_home_position):
+        self._q_home_position = q_home_position
+
+    def set_home_pose(self, limb, q_home_pose):
+        self._q_home_pose[limb] = np.array(q_home_pose)
+
+    def get_home_pose(self, limb):
+        return self._q_home_pose[limb]
+
+    # 3x3 rotation matrix in upper left
+    # rightmost column is x y z 1 from top to bottom (homogeneous coordinates)
+    def get_pose(self, link_1: str, link_2: str):
+        """
+        Calculates pose of link_2 wrt link_1 (per self.links defined in init)
+        """
+        position = self.robot.get_state().position
+        self.state.set_q(position)
+        self.dynamics.compute_forward_kinematics(self.state)
+        link_id_1 = self.link_id_map[link_1]
+        link_id_2 = self.link_id_map[link_2]
+        pose = self.dynamics.compute_transformation(self.state, link_id_1, link_id_2)
+        return pose
+
+    def get_position(self):
+        position = self.robot.get_state().position
+        return position
+
     def move_to_home(self):
         if self._q_home_position is None:
+            print("No home position available.")
             return
         rc = sdk.RobotCommandBuilder().set_command(
             sdk.ComponentBasedCommandBuilder().set_body_command(
@@ -147,23 +166,47 @@ class RainbowInterface:
 
         return 0
 
-    # 3x3 rotation matrix in upper left
-    # rightmost column is x y z 1 from top to bottom (homogeneous coordinates)
-    def get_pose(self, link_1: str, link_2: str):
-        """
-        Calculates pose of link_2 wrt link_1 (per self.links defined in init)
-        """
-        position = self.robot.get_state().position
-        self.state.set_q(position)
-        self.dynamics.compute_forward_kinematics(self.state)
-        link_id_1 = self.link_id_map[link_1]
-        link_id_2 = self.link_id_map[link_2]
-        pose = self.dynamics.compute_transformation(self.state, link_id_1, link_id_2)
-        return pose
+    def move_to_pose(
+        self, T_right, T_left, T_torso, duration_s=4, controller_type="optimal"
+    ):
+        dt_s = 0.01
+        time_mini_s = np.arange(0, duration_s, dt_s)
 
-    def get_position(self):
-        position = self.robot.get_state().position
-        return position
+        T_right_init = self.get_pose("base", "ee_right")
+        T_right_mini = np.stack([T_right_init, T_right, T_right])
+        T_right_mini_interp = interpolate_trajectory(
+            [0, duration_s / 2, duration_s], time_mini_s, T_right_mini
+        )
+        T_left_init = self.get_pose("base", "ee_left")
+        T_left_mini = np.stack([T_left_init, T_left, T_left])
+        T_left_mini_interp = interpolate_trajectory(
+            [0, duration_s / 2, duration_s], time_mini_s, T_left_mini
+        )
+        T_torso_init = self.get_pose("base", "link_torso_5")
+        T_torso_mini = np.stack([T_torso_init, T_torso, T_torso])
+        T_torso_mini_interp = interpolate_trajectory(
+            [0, duration_s / 2, duration_s], time_mini_s, T_torso_mini
+        )
+
+        if controller_type == "optimal":
+            self.command_optimal_trajectory(
+                time_mini_s,
+                T_left=T_left_mini_interp,
+                T_right=T_right_mini_interp,
+                T_torso=T_torso_mini_interp,
+            )
+        elif controller_type == "cartesian":
+            self.command_cartesian_trajectory(
+                time_mini_s,
+                T_left=T_left_mini_interp,
+                T_right=T_right_mini_interp,
+                T_torso=T_torso_mini_interp,
+            )
+        else:
+            print("Unknown controller type specified")
+            return
+
+        time.sleep(1)
 
     # Main function 1
     def run_trajectory_and_record(
@@ -553,31 +596,3 @@ class RainbowInterface:
             return timestamps
 
         return (timestamps, T_left, T_right, T_torso)
-
-    def move_to_pose(self, T_right, T_left, T_torso, duration_s=3):
-        dt_s = 0.01
-        time_mini_s = np.arange(0, duration_s, dt_s)
-        T_right_init = self.get_pose("base", "ee_right")
-        T_right_mini = np.stack([T_right_init, T_right])
-        T_right_mini_interp = interpolate_trajectory(
-            [0, duration_s], time_mini_s, T_right_mini
-        )
-        T_left_init = self.get_pose("base", "ee_left")
-        T_left_mini = np.stack([T_left_init, T_left])
-        T_left_mini_interp = interpolate_trajectory(
-            [0, duration_s], time_mini_s, T_left_mini
-        )
-        T_torso_mini = np.repeat(
-            self.get_pose("base", "link_torso_5")[np.newaxis, ...],
-            repeats=len(time_mini_s),
-            axis=0,
-        )
-        result = self.command_optimal_trajectory(
-            time_mini_s,
-            T_left=T_left_mini_interp,
-            T_right=T_right_mini_interp,
-            T_torso=T_torso_mini,
-        )
-        if not result:
-            print("Start pose reached.")
-        time.sleep(1)
