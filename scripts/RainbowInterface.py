@@ -8,17 +8,17 @@ from typing import Optional
 import queue
 
 # Optimal Controller Presets
-WEIGHT = 0.0015  # main parameter - higher will try to track better
-CENTERING_WEIGHT = 0.0001
-BODY_CENTERING_WEIGHT = 0.001
+WEIGHT = 1.0  # main parameter - higher will try to track better
+CENTERING_WEIGHT = 0.0005
+BODY_CENTERING_WEIGHT = 0.0005
 STOP_COST = WEIGHT * WEIGHT * 2e-3
 VELOCITY_LIMIT_SCALE = 1.0
 MIN_DELTA_COST = WEIGHT * WEIGHT * 2e-3
 PATIENCE = 10
-CONTROL_HOLD_TIME = 1
+CONTROL_HOLD_TIME = 100
 
 # Traj interpolation and Control frequency
-DT = 1. / 500.
+DT = 1.0 / 500.0
 
 
 def interpolate_trajectory(time_in, time_out, pose):
@@ -171,7 +171,7 @@ class RainbowInterface:
         return 0
 
     def move_to_pose(
-        self, T_right, T_left, T_torso, duration_s=5, controller_type="optimal"
+        self, T_right, T_left, T_torso, duration_s=4, controller_type="optimal"
     ):
         dt_s = DT
         time_mini_s = np.arange(0, duration_s, dt_s)
@@ -179,17 +179,17 @@ class RainbowInterface:
         T_right_init = self.get_pose("base", "ee_right")
         T_right_mini = np.stack([T_right_init, T_right, T_right])
         T_right_mini_interp = interpolate_trajectory(
-            [0, duration_s / 2, duration_s], time_mini_s, T_right_mini
+            [0, duration_s * 0.9, duration_s], time_mini_s, T_right_mini
         )
         T_left_init = self.get_pose("base", "ee_left")
         T_left_mini = np.stack([T_left_init, T_left, T_left])
         T_left_mini_interp = interpolate_trajectory(
-            [0, duration_s / 2, duration_s], time_mini_s, T_left_mini
+            [0, duration_s * 0.9, duration_s], time_mini_s, T_left_mini
         )
         T_torso_init = self.get_pose("base", "link_torso_5")
         T_torso_mini = np.stack([T_torso_init, T_torso, T_torso])
         T_torso_mini_interp = interpolate_trajectory(
-            [0, duration_s / 2, duration_s], time_mini_s, T_torso_mini
+            [0, duration_s * 0.9, duration_s], time_mini_s, T_torso_mini
         )
 
         if controller_type == "optimal":
@@ -359,7 +359,7 @@ class RainbowInterface:
             #     print(i, t[i+1], T_right[i + 1])
 
             if i == 0:
-                dt = 2
+                dt = 1
             else:
                 dt = float(t[i] - t[i - 1])
 
@@ -522,7 +522,7 @@ class RainbowInterface:
             iteration_start_time_s = time.time()
 
             if i == 0:
-                dt = 2
+                dt = 1
             else:
                 dt = float(t[i] - t[i - 1])
             minimum_time = dt
