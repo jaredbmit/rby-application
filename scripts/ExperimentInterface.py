@@ -149,10 +149,13 @@ class ExperimentInterface:
         rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
         # pos_right_hand_to_right_gripper_RG = np.array([-0.065, -0.075, 0.08])
         pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
+        right_gripper_offset = np.array([0, 0, 0])
+
         rot_left_hand_to_left_gripper = np.eye(3)  # TODO
         # pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
         pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.175])
         left_gripper_theta = np.pi / 6
+        left_gripper_offset = np.array([0, 0, -0.1])
 
         # Load the trajectory data.
         with h5py.File(self._pouring_trajectory_file, "r") as f:
@@ -222,7 +225,7 @@ class ExperimentInterface:
             pos_robot_to_human_R
             + pos_human_to_right_hand_R
             + pos_right_hand_to_right_gripper_R
-            + self._right_gripper_offset_m
+            + right_gripper_offset
         )
 
         # Left gripper position trajectory
@@ -241,7 +244,7 @@ class ExperimentInterface:
             pos_robot_to_human_R
             + pos_human_to_left_hand_R
             + pos_left_hand_to_left_gripper_R
-            + self._left_gripper_offset_m
+            + left_gripper_offset
         )
 
         # Form pose trajectories
@@ -960,14 +963,14 @@ class ExperimentInterface:
 
 if __name__ == "__main__":
     experiment_interface = ExperimentInterface(
-        model_name="linoss_im", controller="optimal", simulation=True
+        model_name="linoss_im", controller="optimal", simulation=False
     )
     experiment_interface.print_menu()
     previous_user_input = "m"
     print()
-    # experiment_interface.process_user_input("l p 10")
+    experiment_interface.process_user_input("l p 10")
     # experiment_interface.process_user_input("l s 10")
-    experiment_interface.process_user_input("l r 10")
+    # experiment_interface.process_user_input("l r 10")
     print()
     while True:
         user_input = input("Enter command >> ").strip()

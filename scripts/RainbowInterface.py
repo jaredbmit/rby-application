@@ -11,12 +11,15 @@ import queue
 WEIGHT = 0.1  # main parameter - higher will try to track better
 CENTERING_WEIGHT = 0.0001
 BODY_CENTERING_WEIGHT = 0.001
-STOP_COST = 1e-2
+STOP_COST = 1e-3
 VELOCITY_LIMIT_SCALE = 1.0
 VELOCITY_TRACKING_GAIN = 0.5
 MIN_DELTA_COST = 1e-4
 PATIENCE = 10
-CONTROL_HOLD_TIME = 300
+CONTROL_HOLD_TIME = 100
+
+# Traj interpolation and Control frequency
+DT = 0.002
 
 
 def interpolate_trajectory(time_in, time_out, pose):
@@ -87,6 +90,8 @@ class RainbowInterface:
             if not rv:
                 print("Failed to turn on servos.")
                 exit(1)
+
+        self.robot.reset_fault_control_manager()
 
         # Check and reset control manager faults if necessary
         control_manager_state = self.robot.get_control_manager_state()
@@ -167,9 +172,9 @@ class RainbowInterface:
         return 0
 
     def move_to_pose(
-        self, T_right, T_left, T_torso, duration_s=4, controller_type="optimal"
+        self, T_right, T_left, T_torso, duration_s=5, controller_type="optimal"
     ):
-        dt_s = 0.01
+        dt_s = DT
         time_mini_s = np.arange(0, duration_s, dt_s)
 
         T_right_init = self.get_pose("base", "ee_right")
@@ -329,7 +334,7 @@ class RainbowInterface:
         """
 
         # Re-interpolate to adjust the speed.
-        dt = 0.01
+        dt = DT
         time_in = speed_reduction_factor * t
         time_out = np.arange(0, np.max(time_in), dt)
         if T_right is not None:
@@ -355,7 +360,7 @@ class RainbowInterface:
             #     print(i, t[i+1], T_right[i + 1])
 
             if i == 0:
-                dt = 3
+                dt = 2
             else:
                 dt = float(t[i] - t[i - 1])
 
@@ -457,7 +462,7 @@ class RainbowInterface:
 
             delay_duration_s = dt - (time.time() - iteration_start_time_s)
             if delay_duration_s > 0:
-                time.sleep(dt)
+                time.sleep(delay_duration_s)
 
         if rv.finish_code == sdk.RobotCommandFeedback.FinishCode.Unknown:
             print("Control finish unknown.")
@@ -498,7 +503,7 @@ class RainbowInterface:
         STOP_POSITION_TRACKING_ERROR = 1e-3
 
         # Re-interpolate to adjust the speed.
-        dt = 0.01
+        dt = DT
         time_in = speed_reduction_factor * t
         time_out = np.arange(0, np.max(time_in), dt)
         T_right = interpolate_trajectory(time_in, time_out, T_right)
@@ -519,7 +524,7 @@ class RainbowInterface:
             iteration_start_time_s = time.time()
 
             if i == 0:
-                dt = 3
+                dt = 2
             else:
                 dt = float(t[i] - t[i - 1])
             minimum_time = dt
@@ -587,7 +592,7 @@ class RainbowInterface:
 
             delay_duration_s = dt - (time.time() - iteration_start_time_s)
             if delay_duration_s > 0:
-                time.sleep(dt)
+                time.sleep(delay_duration_s)
 
         if rv.finish_code == sdk.RobotCommandFeedback.FinishCode.Unknown:
             print("Control finish unknown.")
