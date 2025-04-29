@@ -85,7 +85,7 @@ class ExperimentInterface:
                         -95,
                         -30,
                         25,
-                        -45,
+                        0,
                     ]
                 )
                 * D2R
@@ -154,13 +154,13 @@ class ExperimentInterface:
         rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
         # pos_right_hand_to_right_gripper_RG = np.array([-0.065, -0.075, 0.08])
         pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
-        right_gripper_offset = np.array([0, 0, 0])
+        right_gripper_offset = np.array([0, 0, -0.05])
 
         rot_left_hand_to_left_gripper = np.eye(3)  # TODO
         # pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
-        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.175])
+        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
         left_gripper_theta = np.pi / 6
-        left_gripper_offset = np.array([0, 0, -0.1])
+        left_gripper_offset = np.array([0, 0, -0.13])
 
         # Load the trajectory data.
         with h5py.File(self._pouring_trajectory_file, "r") as f:
@@ -195,13 +195,18 @@ class ExperimentInterface:
         )
 
         # Left gripper rotation trajectory
+        phi = np.pi / 4
         rot_robot_to_left_gripper_base = np.array(
             [
                 [-np.sin(left_gripper_theta), 0, -np.cos(left_gripper_theta)],
                 [-np.cos(left_gripper_theta), 0, np.sin(left_gripper_theta)],
                 [0, 1, 0],
             ]
-        )
+        ) @ np.array([
+            [np.cos(phi), -np.sin(phi), 0],
+            [np.sin(phi), np.cos(phi), 0],
+            [0, 0, 1], 
+        ])
         rot_robot_to_left_gripper = np.repeat(
             rot_robot_to_left_gripper_base[np.newaxis, ...],
             repeats=n,
@@ -751,7 +756,7 @@ class ExperimentInterface:
             T_right=self._T_right[time_index],
             T_left=self._T_left[time_index],
             T_torso=self._T_torso[time_index],
-            controller_type="optimal",
+            controller_type="cartesian",
         )
 
     def run_trajectory(self):
@@ -968,7 +973,7 @@ class ExperimentInterface:
 
 if __name__ == "__main__":
     experiment_interface = ExperimentInterface(
-        model_name="linoss_im", controller="optimal", simulation=False, is_device_upc=True,
+        model_name="linoss_im", controller="cartesian", simulation=False, is_device_upc=True,
     )
     experiment_interface.print_menu()
     previous_user_input = "m"

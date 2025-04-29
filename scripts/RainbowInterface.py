@@ -8,17 +8,25 @@ from typing import Optional
 import queue
 
 # Optimal Controller Presets
-WEIGHT = 1.0  # main parameter - higher will try to track better
+WEIGHT = 0.1 # 1.0  # main parameter - higher will try to track better
 CENTERING_WEIGHT = 0.0005
 BODY_CENTERING_WEIGHT = 0.0005
 STOP_COST = WEIGHT * WEIGHT * 2e-3
 VELOCITY_LIMIT_SCALE = 1.0
 MIN_DELTA_COST = WEIGHT * WEIGHT * 2e-3
 PATIENCE = 10
-CONTROL_HOLD_TIME = 100
+CONTROL_HOLD_TIME = 1e6
+
+# Cartesian Controller Presets
+MINIMUM_TIME = 3
+LINEAR_VELOCITY_LIMIT = 1.0
+ANGULAR_VELOCITY_LIMIT = np.pi
+ACCELERATION_LIMIT = 1.0
+STOP_ORIENTATION_TRACKING_ERROR = 1e-4
+STOP_POSITION_TRACKING_ERROR = 1e-3
 
 # Traj interpolation and Control frequency
-DT = 1.0 / 500.0
+DT = 0.004
 
 
 def interpolate_trajectory(time_in, time_out, pose):
@@ -66,7 +74,8 @@ class RainbowInterface:
     def _setup(self, address, power_device, servo_device):
         print("Attempting to connect to the robot...")
 
-        self.robot = sdk.create_robot_a(address)
+        # self.robot = sdk.create_robot_a(address)
+        self.robot = sdk.create_robot(address, "a")
 
         if not self.robot.connect():
             print("Error: Unable to establish connection to the robot.")
@@ -157,7 +166,7 @@ class RainbowInterface:
                 sdk.BodyCommandBuilder().set_command(
                     sdk.JointPositionCommandBuilder()
                     .set_position(self._q_home_position)
-                    .set_minimum_time(3)
+                    .set_minimum_time(MINIMUM_TIME)
                 )
             )
         )
@@ -349,14 +358,12 @@ class RainbowInterface:
         timestamps = []
 
         for i in range(len(t)):
-            if i % round(len(t) / 10) == 0:
+            if i % round(len(t) / 100) == 0:
                 print(
                     "Commanding timestep index %4d/%d (%0.1f%%)"
                     % (i, len(t) - 1, 100 * i / (len(t) - 1))
                 )
             iteration_start_time_s = time.time()
-            # if i == len(t)-1-1:
-            #     print(i, t[i+1], T_right[i + 1])
 
             if i == 0:
                 dt = 1
@@ -455,10 +462,12 @@ class RainbowInterface:
             )
 
             rv = stream.send_command(rc)
+            print(rv)
 
             timestamps.append(time.perf_counter())
 
             delay_duration_s = dt - (time.time() - iteration_start_time_s)
+            print(delay_duration_s)
             if delay_duration_s > 0:
                 time.sleep(delay_duration_s)
 
@@ -494,12 +503,6 @@ class RainbowInterface:
             (int): 1 if failure, 0 if success or unknown.
         """
 
-        LINEAR_VELOCITY_LIMIT = 1.5
-        ANGULAR_VELOCITY_LIMIT = np.pi * 1.5
-        ACCELERATION_LIMIT = 1.0
-        STOP_ORIENTATION_TRACKING_ERROR = 1e-4
-        STOP_POSITION_TRACKING_ERROR = 1e-3
-
         # Re-interpolate to adjust the speed.
         dt = DT
         time_in = speed_reduction_factor * t
@@ -532,6 +535,9 @@ class RainbowInterface:
             if T_torso is not None:
                 body_command.set_torso_command(
                     sdk.CartesianCommandBuilder()
+                    .set_command_header(
+                        sdk.CommandHeaderBuilder().set_control_hold_time(CONTROL_HOLD_TIME)
+                    )
                     .add_target(
                         "base",
                         "link_torso_5",
@@ -549,6 +555,9 @@ class RainbowInterface:
             if T_right is not None:
                 body_command.set_right_arm_command(
                     sdk.CartesianCommandBuilder()
+                    .set_command_header(
+                        sdk.CommandHeaderBuilder().set_control_hold_time(CONTROL_HOLD_TIME)
+                    )
                     .add_target(
                         "base",
                         "ee_right",
@@ -566,6 +575,9 @@ class RainbowInterface:
             if T_left is not None:
                 body_command.set_left_arm_command(
                     sdk.CartesianCommandBuilder()
+                    .set_command_header(
+                        sdk.CommandHeaderBuilder().set_control_hold_time(CONTROL_HOLD_TIME)
+                    )
                     .add_target(
                         "base",
                         "ee_left",
