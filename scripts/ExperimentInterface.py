@@ -16,12 +16,16 @@ class ExperimentInterface:
         model_name: str = "linoss_im",
         controller: str = "cartesian",
         simulation: bool = False,
+        is_device_upc: bool = False,
     ):
         # Initialize the robot.
         if simulation:
             robot_ip_address = "localhost:50051"
         else:
-            robot_ip_address = "192.168.12.1:50051"
+            if is_device_upc:    
+                robot_ip_address = "192.168.30.1:50051"
+            else:
+                robot_ip_address = "192.168.12.1:50051"
         power_device_regex_str = ".*"
         servo_name_regex_str = ".*"
         self._rainbow_interface = RainbowInterface(
@@ -30,6 +34,7 @@ class ExperimentInterface:
 
         # Initialize data locations
         data_folder = os.path.expanduser("~/drl/rby-application/data/")
+        print(data_folder)
         trajectory_filename = model_name + "_inference.hdf5"
         self._pouring_trajectory_file = data_folder + "pouring/" + trajectory_filename
         self._scooping_trajectory_file = (
@@ -963,7 +968,7 @@ class ExperimentInterface:
 
 if __name__ == "__main__":
     experiment_interface = ExperimentInterface(
-        model_name="linoss_im", controller="optimal", simulation=False
+        model_name="linoss_im", controller="optimal", simulation=False, is_device_upc=True,
     )
     experiment_interface.print_menu()
     previous_user_input = "m"

@@ -8,18 +8,17 @@ from typing import Optional
 import queue
 
 # Optimal Controller Presets
-WEIGHT = 0.1  # main parameter - higher will try to track better
+WEIGHT = 0.0015  # main parameter - higher will try to track better
 CENTERING_WEIGHT = 0.0001
 BODY_CENTERING_WEIGHT = 0.001
-STOP_COST = 1e-3
+STOP_COST = WEIGHT * WEIGHT * 2e-3
 VELOCITY_LIMIT_SCALE = 1.0
-VELOCITY_TRACKING_GAIN = 0.5
-MIN_DELTA_COST = 1e-4
+MIN_DELTA_COST = WEIGHT * WEIGHT * 2e-3
 PATIENCE = 10
-CONTROL_HOLD_TIME = 100
+CONTROL_HOLD_TIME = 1
 
 # Traj interpolation and Control frequency
-DT = 0.002
+DT = 1. / 500.
 
 
 def interpolate_trajectory(time_in, time_out, pose):
@@ -431,7 +430,6 @@ class RainbowInterface:
                     "left_arm_6", self._q_home_position[19], CENTERING_WEIGHT
                 )
                 .set_velocity_limit_scaling(VELOCITY_LIMIT_SCALE)
-                .set_velocity_tracking_gain(VELOCITY_TRACKING_GAIN)
                 .set_stop_cost(STOP_COST)
                 .set_min_delta_cost(MIN_DELTA_COST)
                 .set_patience(PATIENCE)
