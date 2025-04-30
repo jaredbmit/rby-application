@@ -8,7 +8,7 @@ from typing import Optional
 import queue
 
 # Optimal Controller Presets
-WEIGHT = 0.1 # 1.0  # main parameter - higher will try to track better
+WEIGHT = 0.1  # 1.0  # main parameter - higher will try to track better
 CENTERING_WEIGHT = 0.0005
 BODY_CENTERING_WEIGHT = 0.0005
 STOP_COST = WEIGHT * WEIGHT * 2e-3
@@ -536,7 +536,9 @@ class RainbowInterface:
                 body_command.set_torso_command(
                     sdk.CartesianCommandBuilder()
                     .set_command_header(
-                        sdk.CommandHeaderBuilder().set_control_hold_time(CONTROL_HOLD_TIME)
+                        sdk.CommandHeaderBuilder().set_control_hold_time(
+                            CONTROL_HOLD_TIME
+                        )
                     )
                     .add_target(
                         "base",
@@ -556,7 +558,9 @@ class RainbowInterface:
                 body_command.set_right_arm_command(
                     sdk.CartesianCommandBuilder()
                     .set_command_header(
-                        sdk.CommandHeaderBuilder().set_control_hold_time(CONTROL_HOLD_TIME)
+                        sdk.CommandHeaderBuilder().set_control_hold_time(
+                            CONTROL_HOLD_TIME
+                        )
                     )
                     .add_target(
                         "base",
@@ -576,7 +580,9 @@ class RainbowInterface:
                 body_command.set_left_arm_command(
                     sdk.CartesianCommandBuilder()
                     .set_command_header(
-                        sdk.CommandHeaderBuilder().set_control_hold_time(CONTROL_HOLD_TIME)
+                        sdk.CommandHeaderBuilder().set_control_hold_time(
+                            CONTROL_HOLD_TIME
+                        )
                     )
                     .add_target(
                         "base",
