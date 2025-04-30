@@ -154,13 +154,13 @@ class ExperimentInterface:
         rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
         # pos_right_hand_to_right_gripper_RG = np.array([-0.065, -0.075, 0.08])
         pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
-        right_gripper_offset = np.array([0, 0, -0.05])
+        right_gripper_offset = np.array([0, 0, 0])
 
         rot_left_hand_to_left_gripper = np.eye(3)  # TODO
         # pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
-        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
+        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.175])
         left_gripper_theta = np.pi / 6
-        left_gripper_offset = np.array([0, 0, -0.13])
+        left_gripper_offset = np.array([0, 0, -0.12])
 
         # Load the trajectory data.
         with h5py.File(self._pouring_trajectory_file, "r") as f:
@@ -180,8 +180,13 @@ class ExperimentInterface:
 
             data = trajectory["data"]
             ref = trajectory["reference"]
-            pos_human_to_right_hand_H = np.array(data["pos_human_to_right_hand_H"])
-            rot_human_to_right_hand = np.array(data["rot_human_to_right_hand"]).reshape(
+            # pos_human_to_right_hand_H = np.array(data["pos_human_to_right_hand_H"])
+            # rot_human_to_right_hand = np.array(data["rot_human_to_right_hand"]).reshape(
+            #     (-1, 3, 3)
+            # )
+            truth = trajectory["truth"]
+            pos_human_to_right_hand_H = np.array(truth["pos_human_to_right_hand_H"])
+            rot_human_to_right_hand = np.array(truth["rot_human_to_right_hand"]).reshape(
                 (-1, 3, 3)
             )
             pos_human_to_glass_rim_H = np.array(ref["pos_human_to_glass_rim_H"])
@@ -296,45 +301,46 @@ class ExperimentInterface:
                         BEND_ANGLE,
                         0,
                         0,
-                        -15,
-                        -15,
-                        -10,
-                        -95,
-                        30,
-                        25,
-                        45,
-                        -15,
-                        15,
                         10,
+                        -15,
+                        0,
+                        -100,
+                        -60,
+                        -5,
+                        135,
+                        10,
+                        15,
+                        0,
                         -95,
-                        -30,
-                        25,
-                        -45,
+                        60,
+                        -10,
+                        -135,
                     ]
                 )
                 * D2R
             )
         )
+
         self._rainbow_interface.set_home_pose(
             "left",
             [
                 [
-                    0.34486492049937717,
-                    -0.07384813809901812,
-                    -0.9357428274415284,
-                    0.4940080743827816,
+                    0.159645912234032,
+                    -0.0427832815472206,
+                    -0.9862468116688714,
+                    0.38783464467773754,
                 ],
                 [
-                    -0.9342627602581264,
-                    0.06929264092571862,
-                    -0.34978797107448634,
-                    0.3677037157440348,
+                    -0.987164780709483,
+                    -0.011316095764555554,
+                    -0.15930361484738895,
+                    0.333979961112313,
                 ],
                 [
-                    0.09067128213400649,
-                    0.9948592776935072,
-                    -0.045096964236272234,
-                    1.1828204989965654,
+                    -0.004344931962826815,
+                    0.9990202884810192,
+                    -0.04404071717785429,
+                    1.048197011326614,
                 ],
                 [0.0, 0.0, 0.0, 1.0],
             ],
@@ -342,33 +348,32 @@ class ExperimentInterface:
         self._rainbow_interface.set_home_pose(
             "right",
             [
-                [
-                    0.344859060491093,
-                    0.07384720848743002,
-                    -0.9357450604709672,
-                    0.4940085795853877,
-                ],
-                [
-                    0.934264388925526,
-                    0.06929915270621888,
-                    0.3497823309142603,
-                    -0.36770178404107295,
-                ],
-                [
-                    0.09067678855591227,
-                    -0.9948588931264642,
-                    -0.04509437641626934,
-                    1.1828198617983126,
-                ],
-                [0.0, 0.0, 0.0, 1.0],
-            ],
+                [0.07605533320368647, 0.06618915145332903, -0.9949043082232402, 0.3927954392257237],
+                [0.9971000621617585, -0.0023911813682933308, 0.07606410644108913, -0.3153811109905643], 
+                [0.0026556220163332185, -0.9978042285346116, -0.0661790691242645, 1.0731154935174807], 
+                [0.0, 0.0, 0.0, 1.0]]
         )
         self._rainbow_interface.set_home_pose(
             "torso",
             [
-                [0.9999999999999999, 0.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 0.9999999999999999, 1.2792920781331494],
+                [
+                    0.9999999923432784,
+                    -1.7825614371025433e-07,
+                    0.00012374736817491496,
+                    9.945868070283945e-05,
+                ],
+                [
+                    1.7955099573386702e-07,
+                    0.9999999999452397,
+                    -1.0463662199033378e-05,
+                    -8.787131869840205e-06,
+                ],
+                [
+                    -0.0001237473663029392,
+                    1.0463684337879204e-05,
+                    0.9999999922885504,
+                    1.2792931702240085,
+                ],
                 [0.0, 0.0, 0.0, 1.0],
             ],
         )
@@ -384,8 +389,8 @@ class ExperimentInterface:
         rot_left_hand_to_left_gripper = (
             rot_left_hand_to_spoon @ rot_spoon_to_left_gripper
         )
-        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0])
-        left_gripper_offset = np.array([-0.2, -0.15, -0.05])
+        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.025])
+        left_gripper_offset = np.array([-0.2, -0.1, -0.02])
         # Right side
         pos_right_hand_to_pitcher_p = np.array([0.06, -0.01, -0.16])
         rot_right_hand_to_pitcher = np.array(
@@ -396,9 +401,9 @@ class ExperimentInterface:
             ]
         )
         rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
-        # pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0])
         pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
-        right_gripper_offset = np.array([-0.2, -0.2, -0.05])
+        right_gripper_offset = np.array([-0.22, -0.2, -0.05])
+        z_right_gripper = 1.09
 
         # Load the trajectory data.
         with h5py.File(self._scooping_trajectory_file, "r") as f:
@@ -439,8 +444,16 @@ class ExperimentInterface:
                 [0, -1, 0],
             ]
         )
+        phi = np.pi / 9
+        Rz = np.array(
+            [
+                [np.cos(phi), -np.sin(phi), 0],
+                [np.sin(phi), np.cos(phi), 0],
+                [0, 0, 1],
+            ]
+        )
         rot_robot_to_right_gripper = np.repeat(
-            rot_robot_to_right_gripper_base[np.newaxis, ...],
+            Rz @ rot_robot_to_right_gripper_base[np.newaxis, ...],
             repeats=n,
             axis=0,
         )
@@ -487,6 +500,7 @@ class ExperimentInterface:
             + rot_robot_to_right_gripper @ pos_right_hand_to_right_gripper_RG
             + right_gripper_offset
         )
+        pos_robot_to_right_gripper_R[:, 2] = z_right_gripper
 
         # Form pose trajectories
         T_right = np.zeros((n, 4, 4))
@@ -973,7 +987,7 @@ class ExperimentInterface:
 
 if __name__ == "__main__":
     experiment_interface = ExperimentInterface(
-        model_name="linoss_im", controller="cartesian", simulation=False, is_device_upc=True,
+        model_name="lstm", controller="cartesian", simulation=False, is_device_upc=True,
     )
     experiment_interface.print_menu()
     previous_user_input = "m"
