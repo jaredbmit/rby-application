@@ -68,6 +68,7 @@ class RainbowInterface:
             "right": None,
             "torso": None,
         }
+        self._q_back_position = None
 
         self._setup(address, power_device, servo)
 
@@ -133,6 +134,9 @@ class RainbowInterface:
     def set_home_position(self, q_home_position):
         self._q_home_position = q_home_position
 
+    def set_back_position(self, q_back_position):
+        self._q_back_position = q_back_position
+
     def set_home_pose(self, limb, q_home_pose):
         self._q_home_pose[limb] = np.array(q_home_pose)
 
@@ -166,6 +170,28 @@ class RainbowInterface:
                 sdk.BodyCommandBuilder().set_command(
                     sdk.JointPositionCommandBuilder()
                     .set_position(self._q_home_position)
+                    .set_minimum_time(MINIMUM_TIME)
+                )
+            )
+        )
+
+        rv = self.robot.send_command(rc, 10).get()
+
+        if rv.finish_code != sdk.RobotCommandFeedback.FinishCode.Ok:
+            print("Error: Failed to reset pose.")
+            return 1
+
+        return 0
+
+    def move_to_back(self):
+        if self._q_back_position is None:
+            print("No back position available.")
+            return
+        rc = sdk.RobotCommandBuilder().set_command(
+            sdk.ComponentBasedCommandBuilder().set_body_command(
+                sdk.BodyCommandBuilder().set_command(
+                    sdk.JointPositionCommandBuilder()
+                    .set_position(self._q_back_position)
                     .set_minimum_time(MINIMUM_TIME)
                 )
             )

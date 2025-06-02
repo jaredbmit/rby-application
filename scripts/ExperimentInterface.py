@@ -34,8 +34,8 @@ class ExperimentInterface:
 
         # Initialize data locations
         data_folder = os.path.expanduser("~/drl/rby-application/data/")
-        print(data_folder)
         trajectory_filename = model_name + "_inference.hdf5"
+        self._model_name = model_name
         self._pouring_trajectory_file = data_folder + "pouring/" + trajectory_filename
         self._scooping_trajectory_file = (
             data_folder + "scooping_powder/" + trajectory_filename
@@ -47,7 +47,7 @@ class ExperimentInterface:
         self._T_left = None
         self._T_right = None
         self._T_torso = None
-        self._speed_reduction_factor = 3
+        self._speed_reduction_factor = 2.5
         self._split = "test"
         self._right_gripper_offset_m = np.array([0, 0, 0], dtype=float)
         self._left_gripper_offset_m = np.array([0, 0, 0], dtype=float)
@@ -322,6 +322,35 @@ class ExperimentInterface:
                 * D2R
             )
         )
+
+        # For demo purposes
+        if (trajectory_index == 13):
+            self._rainbow_interface.set_back_position(
+                np.array(
+                    [
+                        7.42453762e-06,
+                        1.74668936e-01,
+                        -3.49014874e-01,
+                        1.74569917e-01,
+                        1.63887888e-06,
+                        -1.22935702e-07,
+                        1.40653378e-02,
+                        -3.36911917e-02,
+                        -5.55536781e-02,
+                        -1.72918945e+00,
+                        3.24662020e-02,
+                        1.47185938e-01,
+                        1.50428023e+00,
+                        7.14587326e-01,
+                        6.72670364e-01,
+                        -5.10926346e-01,
+                        -2.05019803e+00,
+                        8.28710379e-01,
+                        -5.10307326e-01,
+                        -2.20923818e+00,
+                    ]
+                )
+            )
 
         self._rainbow_interface.set_home_pose(
             "left",
@@ -664,7 +693,7 @@ class ExperimentInterface:
             rot_left_hand_to_spoon @ rot_spoon_to_left_gripper
         )
         pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.025])
-        left_gripper_offset = np.array([-0.25, -0.1, -0.02])
+        left_gripper_offset = np.array([-0.25, -0.1, 0])
         # Right side
         pos_right_hand_to_pitcher_p = np.array([0.06, -0.01, -0.16])
         rot_right_hand_to_pitcher = np.array(
@@ -676,7 +705,7 @@ class ExperimentInterface:
         )
         rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
         pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
-        right_gripper_offset = np.array([-0.25, -0.2, -0.05])
+        right_gripper_offset = np.array([-0.1, -0.2, -0.025])
         z_right_gripper = 1.09
 
         # Load the trajectory data.
@@ -718,7 +747,7 @@ class ExperimentInterface:
                 [0, -1, 0],
             ]
         )
-        phi = np.pi / 9
+        phi = np.pi / 4
         Rz = np.array(
             [
                 [np.cos(phi), -np.sin(phi), 0],
@@ -816,16 +845,26 @@ class ExperimentInterface:
             controller_type="cartesian",
         )
 
-    def run_trajectory(self):
+    def run_trajectory(self, move_to_start=True):
         if self._t is None or self._T_right is None or self._T_left is None:
             return
 
         # Command starting pose
-        print("Navigating to the starting pose")
-        self.move_to_trajectory_pose(time_ratio=0)
-        user_input = input("Press Enter to run the trajectory, or c to cancel >> ")
-        if user_input.strip().lower() in ["c", "cancel", "q", "quit"]:
-            return
+        if move_to_start:
+            print("Navigating to the starting pose")
+            self.move_to_trajectory_pose(time_ratio=0)
+            user_input = input("Press Enter to run the trajectory, or c to cancel >> ")
+            if user_input.strip().lower() in ["c", "cancel", "q", "quit"]:
+                return
+        else:
+            left_pose = self._rainbow_interface.get_pose("base", "ee_left")
+            right_pose = self._rainbow_interface.get_pose("base", "ee_right")
+            torso_pose = self._rainbow_interface.get_pose("base", "link_torso_5")
+            if np.linalg.norm(left_pose - self._T_left[0]) > 1e-1 \
+                or np.linalg.norm(right_pose - self._T_right[0]) > 1e-1 \
+                or np.linalg.norm(torso_pose - self._T_torso[0]) > 1e-1:
+                print("Unable to run fast mode. Pose too far.")
+                return
 
         print("Running the trajectory")
         (
@@ -922,6 +961,8 @@ class ExperimentInterface:
             self.print_menu()
         elif user_input in ["home", "h"]:
             self._rainbow_interface.move_to_home()
+        elif user_input in ["back", "b"]:
+            self._rainbow_interface.move_to_back()
         elif user_input_split[0] in ["speed", "s"]:
             if len(user_input_split) == 1:
                 print(
@@ -975,6 +1016,8 @@ class ExperimentInterface:
             self.move_to_trajectory_pose(time_percent / 100)
         elif user_input_split[0] in ["run", "r"]:
             self.run_trajectory()
+        elif user_input_split[0] in ["run fast", "rf"]:
+            self.run_trajectory(move_to_start=False)
         elif user_input_split[0] in ["offset", "o"]:
             if len(user_input_split) == 1:
                 print(
@@ -1038,9 +1081,9 @@ if __name__ == "__main__":
     experiment_interface.print_menu()
     previous_user_input = "m"
     print()
-    # experiment_interface.process_user_input("l p 10")
-    # experiment_interface.process_user_input("l s 10")
-    experiment_interface.process_user_input("l r 10")
+    # experiment_interface.process_user_input("l p 1")
+    experiment_interface.process_user_input("l s 13")
+    # experiment_interface.process_user_input("l r 8")
     print()
     while True:
         user_input = input("Enter command >> ").strip()
