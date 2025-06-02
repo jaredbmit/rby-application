@@ -62,65 +62,31 @@ class ExperimentInterface:
 
         # Define the home positions.
         BEND_ANGLE = 10
-        self._rainbow_interface.set_home_position(
-            (
-                np.array(
-                    [
-                        0,
-                        BEND_ANGLE,
-                        -2 * BEND_ANGLE,
-                        BEND_ANGLE,
-                        0,
-                        0,
-                        -15,
-                        -15,
-                        -10,
-                        -95,
-                        30,
-                        25,
-                        45,
-                        -15,
-                        15,
-                        10,
-                        -95,
-                        -30,
-                        25,
-                        0,
-                    ]
-                )
-                * D2R
-            )
-        )
-
-        # For demo purposes
-        if (trajectory_index == 1):
-            self._rainbow_interface.set_back_position(
-                np.array(
-                    [
-                        -6.17389300e-07, 
-                        1.74593623e-01,
-                        -3.49033159e-01, 
-                        1.74547715e-01,
-                        -1.34568318e-06,
-                        -6.50520729e-07,
-                        3.18345139e-03,
-                        -1.08085080e-01,
-                        1.44368095e-01,
-                        -2.04600187e+00,
-                        1.12667224e+00, 
-                        8.95864551e-01, 
-                        4.93041229e-01, 
-                        -2.48113893e-01,
-                        4.95329805e-01, 
-                        -5.71965034e-02,
-                        -1.65806530e+00,
-                        -6.82544517e-01,
-                        5.81223203e-01,
-                        -3.60337552e-01,
-                    ]
-                )
-            )
-
+        home_position = np.array(
+            [
+                0,
+                BEND_ANGLE,
+                -2 * BEND_ANGLE,
+                BEND_ANGLE,
+                0,
+                0,
+                -15,
+                -15,
+                -10,
+                -95,
+                30,
+                25,
+                45,
+                -15,
+                15,
+                10,
+                -95,
+                -30,
+                25,
+                0,
+            ]
+        ) * D2R
+        self._rainbow_interface.set_home_position(home_position)
         self._rainbow_interface.set_home_pose(
             "left",
             [
@@ -172,12 +138,51 @@ class ExperimentInterface:
         self._rainbow_interface.set_home_pose(
             "torso",
             [
-                [0.9999999999999999, 0.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0, 0.0],
                 [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 0.9999999999999999, 1.2792920781331494],
+                [0.0, 0.0, 1.0, 1.2792920781331494],
                 [0.0, 0.0, 0.0, 1.0],
             ],
         )
+
+        # For demo purposes
+        if (trajectory_index == 1):
+            back_position = np.array(
+                [
+                    -6.17389300e-07,
+                    1.74593623e-01,
+                    -3.49033159e-01,
+                    1.74547715e-01,
+                    -1.34568318e-06,
+                    -6.50520729e-07,
+                    3.18345139e-03,
+                    -1.08085080e-01,
+                    1.44368095e-01,
+                    -2.04600187e+00,
+                    1.12667224e+00, 
+                    8.95864551e-01, 
+                    4.93041229e-01, 
+                    8.62024166e-01, 
+                    3.71370655e-01, 
+                    -1.99136875e-01, 
+                    -2.08446056e+00, 
+                    4.36136013e-02,
+                    -3.59360092e-01,
+                    -1.37096506e+00
+                ]
+            )
+            self._rainbow_interface.set_back_position(back_position)
+            home_position[13:20] = back_position[13:20]
+            self._rainbow_interface.set_home_position(home_position)
+            self._rainbow_interface.set_home_pose(
+                "left",
+                [
+                    [-0.126052393, 0.0327820287, -0.991481786, 0.189972559],
+                    [-0.991534988, 0.0272010802, 0.1269585251, 0.262248130],
+                    [0.0311313336, 0.9990923079, 0.0290757672, 1.040682145],
+                    [0.0, 0.0, 0.0, 1.0]
+                ]
+            )
 
         # Define the human to robot transformations.
         rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
@@ -307,7 +312,6 @@ class ExperimentInterface:
         # Torso static trajectory
         T_torso = np.repeat(
             self._rainbow_interface.get_home_pose("torso")[np.newaxis, ...],
-            # self._rainbow_interface.get_pose('base', 'link_torso_5')[np.newaxis, ...],
             repeats=n,
             axis=0,
         )
@@ -315,7 +319,6 @@ class ExperimentInterface:
         ## TEMPORARY -- OVERRIDE
         T_left = np.repeat(
             self._rainbow_interface.get_home_pose("left")[np.newaxis, ...],
-            # self._rainbow_interface.get_pose('base', 'link_torso_5')[np.newaxis, ...],
             repeats=n,
             axis=0,
         )
@@ -360,36 +363,6 @@ class ExperimentInterface:
                 * D2R
             )
         )
-
-        # For demo purposes
-        if (trajectory_index == 13):
-            self._rainbow_interface.set_back_position(
-                np.array(
-                    [
-                        7.42453762e-06,
-                        1.74668936e-01,
-                        -3.49014874e-01,
-                        1.74569917e-01,
-                        1.63887888e-06,
-                        -1.22935702e-07,
-                        1.40653378e-02,
-                        -3.36911917e-02,
-                        -5.55536781e-02,
-                        -1.72918945e+00,
-                        3.24662020e-02,
-                        1.47185938e-01,
-                        1.50428023e+00,
-                        7.14587326e-01,
-                        6.72670364e-01,
-                        -5.10926346e-01,
-                        -2.05019803e+00,
-                        8.28710379e-01,
-                        -5.10307326e-01,
-                        -2.20923818e+00,
-                    ]
-                )
-            )
-
         self._rainbow_interface.set_home_pose(
             "left",
             [
@@ -462,6 +435,35 @@ class ExperimentInterface:
                 [0.0, 0.0, 0.0, 1.0],
             ],
         )
+
+        # For demo purposes
+        if (trajectory_index == 13):
+            self._rainbow_interface.set_back_position(
+                np.array(
+                    [
+                        8.23785225e-06,
+                        1.74675491e-01,
+                        -3.49028852e-01,
+                        1.74572397e-01,
+                        -2.88587980e-07,
+                        -1.63695862e-07,
+                        7.34437427e-02,
+                        -4.99552712e-02,
+                        2.79238517e-02,
+                        -1.79229250e+00,
+                        4.32691588e-01,
+                        1.69648230e-01,
+                        1.09472165e+00,
+                        6.29996289e-01,
+                        7.22332924e-01,
+                        -6.13619052e-01,
+                        -1.96360159e+00,
+                        8.26911356e-01,
+                        -7.21149745e-01,
+                        -2.10347196e+00,
+                    ]
+                )
+            )
 
         # Define the human to robot transformations.
         rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
@@ -894,15 +896,17 @@ class ExperimentInterface:
             user_input = input("Press Enter to run the trajectory, or c to cancel >> ")
             if user_input.strip().lower() in ["c", "cancel", "q", "quit"]:
                 return
-        else:
-            left_pose = self._rainbow_interface.get_pose("base", "ee_left")
-            right_pose = self._rainbow_interface.get_pose("base", "ee_right")
-            torso_pose = self._rainbow_interface.get_pose("base", "link_torso_5")
-            if np.linalg.norm(left_pose - self._T_left[0]) > 1e-1 \
-                or np.linalg.norm(right_pose - self._T_right[0]) > 1e-1 \
-                or np.linalg.norm(torso_pose - self._T_torso[0]) > 1e-1:
-                print("Unable to run fast mode. Pose too far.")
-                return
+        # else:
+        #     left_pose = self._rainbow_interface.get_pose("base", "ee_left")
+        #     right_pose = self._rainbow_interface.get_pose("base", "ee_right")
+        #     torso_pose = self._rainbow_interface.get_pose("base", "link_torso_5")
+        #     if np.linalg.norm(left_pose - self._T_left[0]) > 1e-1 \
+        #         or np.linalg.norm(right_pose - self._T_right[0]) > 1e-1 \
+        #         or np.linalg.norm(torso_pose - self._T_torso[0]) > 1e-1:
+        #         print(left_pose)
+        #         print(self._T_left[0])
+        #         print("Unable to run fast mode. Pose too far.")
+        #         return
 
         print("Running the trajectory")
         (
