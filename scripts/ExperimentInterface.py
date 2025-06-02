@@ -91,6 +91,36 @@ class ExperimentInterface:
                 * D2R
             )
         )
+
+        # For demo purposes
+        if (trajectory_index == 1):
+            self._rainbow_interface.set_back_position(
+                np.array(
+                    [
+                        -6.17389300e-07, 
+                        1.74593623e-01,
+                        -3.49033159e-01, 
+                        1.74547715e-01,
+                        -1.34568318e-06,
+                        -6.50520729e-07,
+                        3.18345139e-03,
+                        -1.08085080e-01,
+                        1.44368095e-01,
+                        -2.04600187e+00,
+                        1.12667224e+00, 
+                        8.95864551e-01, 
+                        4.93041229e-01, 
+                        -2.48113893e-01,
+                        4.95329805e-01, 
+                        -5.71965034e-02,
+                        -1.65806530e+00,
+                        -6.82544517e-01,
+                        5.81223203e-01,
+                        -3.60337552e-01,
+                    ]
+                )
+            )
+
         self._rainbow_interface.set_home_pose(
             "left",
             [
@@ -277,6 +307,14 @@ class ExperimentInterface:
         # Torso static trajectory
         T_torso = np.repeat(
             self._rainbow_interface.get_home_pose("torso")[np.newaxis, ...],
+            # self._rainbow_interface.get_pose('base', 'link_torso_5')[np.newaxis, ...],
+            repeats=n,
+            axis=0,
+        )
+
+        ## TEMPORARY -- OVERRIDE
+        T_left = np.repeat(
+            self._rainbow_interface.get_home_pose("left")[np.newaxis, ...],
             # self._rainbow_interface.get_pose('base', 'link_torso_5')[np.newaxis, ...],
             repeats=n,
             axis=0,
