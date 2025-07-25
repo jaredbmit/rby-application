@@ -1,3 +1,0 @@
-[submodule "sdk"]
-	path = sdk
-	url = git@github.com:RainbowRobotics/rby1-sdk.git
