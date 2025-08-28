@@ -136,7 +136,10 @@ class RainbowInterface:
 
     def set_back_position(self, q_back_position):
         self._q_back_position = q_back_position
-
+    
+    def get_back_position(self):
+        return self._q_back_position
+    
     def set_home_pose(self, limb, q_home_pose):
         self._q_home_pose[limb] = np.array(q_home_pose)
 
@@ -386,7 +389,7 @@ class RainbowInterface:
         for i in range(len(t)):
             if i % round(len(t) / 100) == 0:
                 print(
-                    "Commanding timestep index %4d/%d (%0.1f%%)"
+                    "Commanding timestep index %4d/%d (%5.1f%%)"
                     % (i, len(t) - 1, 100 * i / (len(t) - 1))
                 )
             iteration_start_time_s = time.time()
@@ -545,7 +548,7 @@ class RainbowInterface:
         for i in range(len(t)):
             if i % round(len(t) / 10) == 0:
                 print(
-                    "Commanding timestep index %4d/%d (%0.1f%%)"
+                    "Commanding timestep index %4d/%d (%5.1f%%)"
                     % (i, len(t) - 1, 100 * i / (len(t) - 1))
                 )
             iteration_start_time_s = time.time()

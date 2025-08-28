@@ -4,6 +4,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import scipy.spatial.transform as tf
+import traceback
 
 from RainbowInterface import RainbowInterface
 
@@ -51,6 +52,10 @@ class ExperimentInterface:
         self._split = "test"
         self._right_gripper_offset_m = np.array([0, 0, 0], dtype=float)
         self._left_gripper_offset_m = np.array([0, 0, 0], dtype=float)
+        
+        # Initialize state for input commands to process.
+        self._command_queue = []
+        self._command_history = ['m']
         self._previous_load_trajectory_command = None
 
         # self._controller_type = "cartesian"
@@ -183,6 +188,8 @@ class ExperimentInterface:
                     [0.0, 0.0, 0.0, 1.0]
                 ]
             )
+        else:
+            self._rainbow_interface.set_back_position(None)
 
         # Define the human to robot transformations.
         rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
@@ -316,7 +323,7 @@ class ExperimentInterface:
             axis=0,
         )
 
-        ## TEMPORARY -- OVERRIDE
+        ## TEMPORARY -- OVERRIDE TO KEEP LEFT HAND AT HOME POSITION RATHER THAN GLASS POSITION
         T_left = np.repeat(
             self._rainbow_interface.get_home_pose("left")[np.newaxis, ...],
             repeats=n,
@@ -464,6 +471,8 @@ class ExperimentInterface:
                     ]
                 )
             )
+        else:
+            self._rainbow_interface.set_back_position(None)
 
         # Define the human to robot transformations.
         rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
@@ -479,7 +488,7 @@ class ExperimentInterface:
         pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.025])
         left_gripper_offset = np.array([-0.2, -0.1, -0.02])
         # Right side
-        pos_right_hand_to_pitcher_p = np.array([0.06, -0.01, -0.16])
+        pos_right_hand_to_pitcher_p = np.array([0.02, -0.00, -0.15]) # before 2025-08-27: [0.06, -0.01, -0.16]
         rot_right_hand_to_pitcher = np.array(
             [
                 [0, 0, 1],
@@ -720,6 +729,8 @@ class ExperimentInterface:
                 [0.0, 0.0, 0.0, 1.0],
             ],
         )
+        
+        self._rainbow_interface.set_back_position(None)
 
         # Define the human to robot transformations.
         rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
@@ -735,7 +746,7 @@ class ExperimentInterface:
         pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.025])
         left_gripper_offset = np.array([-0.25, -0.1, 0])
         # Right side
-        pos_right_hand_to_pitcher_p = np.array([0.06, -0.01, -0.16])
+        pos_right_hand_to_pitcher_p = np.array([0.09, -0.03, -0.16]) # before 2025-08-27: [0.06, -0.01, -0.16]
         rot_right_hand_to_pitcher = np.array(
             [
                 [0, 0, 1],
@@ -885,12 +896,12 @@ class ExperimentInterface:
             controller_type="cartesian",
         )
 
-    def run_trajectory(self, move_to_start=True):
+    def run_trajectory(self, move_to_start_and_prompt=True, plot_trajectory_tracking=True):
         if self._t is None or self._T_right is None or self._T_left is None:
             return
 
         # Command starting pose
-        if move_to_start:
+        if move_to_start_and_prompt:
             print("Navigating to the starting pose")
             self.move_to_trajectory_pose(time_ratio=0)
             user_input = input("Press Enter to run the trajectory, or c to cancel >> ")
@@ -926,55 +937,55 @@ class ExperimentInterface:
             speed_reduction_factor=self._speed_reduction_factor,
             controller_type=self._controller_type,
         )
-
-        fig, ax = plt.subplots(3)
-        time_cmd = [t - timestamps_cmd[0] for t in timestamps_cmd]
-        time_true = [t - timestamps_true[0] for t in timestamps_true]
-        ax[0].plot(time_cmd, T_left_interp[:, 0, 3], "--", label="Command")
-        ax[0].plot(time_true, T_left_true[:, 0, 3], "-", label="Measured")
-        ax[0].set_ylabel("X (m)")
-        ax[0].legend()
-        ax[1].plot(time_cmd, T_left_interp[:, 1, 3], "--", label="Command")
-        ax[1].plot(time_true, T_left_true[:, 1, 3], "-", label="Measured")
-        ax[1].set_ylabel("Y (m)")
-        ax[2].plot(time_cmd, T_left_interp[:, 2, 3], "--", label="Command")
-        ax[2].plot(time_true, T_left_true[:, 2, 3], "-", label="Measured")
-        ax[2].set_ylabel("Z (m)")
-        ax[2].set_xlabel("Time (s)")
-        fig.suptitle("Left EE Position Tracking")
-        fig.savefig("left_ee_position_tracking.png")
-        fig, ax = plt.subplots(3)
-        ax[0].plot(time_cmd, T_right_interp[:, 0, 3], "--", label="Command")
-        ax[0].plot(time_true, T_right_true[:, 0, 3], "-", label="Measured")
-        ax[0].set_ylabel("X (m)")
-        ax[0].legend()
-        ax[1].plot(time_cmd, T_right_interp[:, 1, 3], "--", label="Command")
-        ax[1].plot(time_true, T_right_true[:, 1, 3], "-", label="Measured")
-        ax[1].set_ylabel("Y (m)")
-        ax[2].plot(time_cmd, T_right_interp[:, 2, 3], "--", label="Command")
-        ax[2].plot(time_true, T_right_true[:, 2, 3], "-", label="Measured")
-        ax[2].set_ylabel("Z (m)")
-        ax[2].set_xlabel("Time (s)")
-        fig.suptitle("Right EE Position Tracking")
-        fig.savefig("right_ee_position_tracking.png")
-        fig, ax = plt.subplots(3)
-        ax[0].plot(time_cmd, T_torso_interp[:, 0, 3], "--", label="Command")
-        ax[0].plot(time_true, T_torso_true[:, 0, 3], "-", label="Measured")
-        ax[0].set_ylabel("X (m)")
-        ax[0].legend()
-        ax[1].plot(time_cmd, T_torso_interp[:, 1, 3], "--", label="Command")
-        ax[1].plot(time_true, T_torso_true[:, 1, 3], "-", label="Measured")
-        ax[1].set_ylabel("Y (m)")
-        ax[2].plot(time_cmd, T_torso_interp[:, 2, 3], "--", label="Command")
-        ax[2].plot(time_true, T_torso_true[:, 2, 3], "-", label="Measured")
-        ax[2].set_ylabel("Z (m)")
-        ax[2].set_xlabel("Time (s)")
-        fig.suptitle("Torso Position Tracking")
-        fig.savefig("torso_position_tracking.png")
         print("Trajectory finished.")
-        time.sleep(1)
-
-        print("Done.")
+        # time.sleep(1)
+        
+        if plot_trajectory_tracking:
+            fig, ax = plt.subplots(3)
+            time_cmd = [t - timestamps_cmd[0] for t in timestamps_cmd]
+            time_true = [t - timestamps_true[0] for t in timestamps_true]
+            ax[0].plot(time_cmd, T_left_interp[:, 0, 3], "--", label="Command")
+            ax[0].plot(time_true, T_left_true[:, 0, 3], "-", label="Measured")
+            ax[0].set_ylabel("X (m)")
+            ax[0].legend()
+            ax[1].plot(time_cmd, T_left_interp[:, 1, 3], "--", label="Command")
+            ax[1].plot(time_true, T_left_true[:, 1, 3], "-", label="Measured")
+            ax[1].set_ylabel("Y (m)")
+            ax[2].plot(time_cmd, T_left_interp[:, 2, 3], "--", label="Command")
+            ax[2].plot(time_true, T_left_true[:, 2, 3], "-", label="Measured")
+            ax[2].set_ylabel("Z (m)")
+            ax[2].set_xlabel("Time (s)")
+            fig.suptitle("Left EE Position Tracking")
+            fig.savefig("left_ee_position_tracking.png")
+            fig, ax = plt.subplots(3)
+            ax[0].plot(time_cmd, T_right_interp[:, 0, 3], "--", label="Command")
+            ax[0].plot(time_true, T_right_true[:, 0, 3], "-", label="Measured")
+            ax[0].set_ylabel("X (m)")
+            ax[0].legend()
+            ax[1].plot(time_cmd, T_right_interp[:, 1, 3], "--", label="Command")
+            ax[1].plot(time_true, T_right_true[:, 1, 3], "-", label="Measured")
+            ax[1].set_ylabel("Y (m)")
+            ax[2].plot(time_cmd, T_right_interp[:, 2, 3], "--", label="Command")
+            ax[2].plot(time_true, T_right_true[:, 2, 3], "-", label="Measured")
+            ax[2].set_ylabel("Z (m)")
+            ax[2].set_xlabel("Time (s)")
+            fig.suptitle("Right EE Position Tracking")
+            fig.savefig("right_ee_position_tracking.png")
+            fig, ax = plt.subplots(3)
+            ax[0].plot(time_cmd, T_torso_interp[:, 0, 3], "--", label="Command")
+            ax[0].plot(time_true, T_torso_true[:, 0, 3], "-", label="Measured")
+            ax[0].set_ylabel("X (m)")
+            ax[0].legend()
+            ax[1].plot(time_cmd, T_torso_interp[:, 1, 3], "--", label="Command")
+            ax[1].plot(time_true, T_torso_true[:, 1, 3], "-", label="Measured")
+            ax[1].set_ylabel("Y (m)")
+            ax[2].plot(time_cmd, T_torso_interp[:, 2, 3], "--", label="Command")
+            ax[2].plot(time_true, T_torso_true[:, 2, 3], "-", label="Measured")
+            ax[2].set_ylabel("Z (m)")
+            ax[2].set_xlabel("Time (s)")
+            fig.suptitle("Torso Position Tracking")
+            fig.savefig("torso_position_tracking.png")
+            print("Done.")
 
     def print_menu(self):
         print(
@@ -986,82 +997,128 @@ class ExperimentInterface:
             load pour/scoop/stir # [l p/s/r #]       : Load trajectory index #
             time # [t #]                             : Move to the pose at time percent # (0-100)
             run [r]                                  : Run the trajectory
+            run now [r n]                            : Run the trajectory; no wait at the start pose
+            back [b]                                 : Move to a preset back position (if specified)
             offset right/left x/y/z # [o r/l x/y/z #]: Increase a gripper offset by the relative # cm
             offset [o]                               : Print the current gripper offsets
             pose [p]                                 : Print the current robot pose
             joints [j]                               : Print the current robot joint positions
+            demo lemonade                            : Run a preset routine
+            history # [y #]                          : View the command history or run a past command
             quit [q]                                 : Quit
             """
         )
 
-    def process_user_input(self, user_input):
-        user_input = user_input.strip().lower()
-        user_input_split = [s.strip() for s in user_input.split(" ")]
-        if user_input in ["quit", "q"]:
+    def process_commands(self, new_command=None, clear_queue=False):
+        # Manage the command queue and get the next command to process.
+        if clear_queue:
+            self._command_queue = []
+        if new_command is not None:
+            self._command_queue.append(new_command.strip().lower())
+        if len(self._command_queue) == 0:
+            user_input = input("Enter command >> ").strip()
+            self._command_queue.append(user_input)
+        command = self._command_queue[0]
+        self._command_queue = self._command_queue[1:]
+        if command == '':
+            return
+            # offset = -1
+            # while command == '' and abs(offset) <= len(self._command_history):
+            #     command = self._command_history[offset]
+            #     offset -= 1
+        if len(self._command_history) == 0 or command != self._command_history[-1]:
+            self._command_history.append(command)
+        print('Processing command: %s' % command)
+        # Process the command.
+        command_split = [s.strip() for s in command.split(" ")]
+        if command in ["quit", "q"]:
             return "quit"
-        elif user_input in ["menu", "m"]:
+        elif command in ["menu", "m"]:
             self.print_menu()
-        elif user_input in ["home", "h"]:
+        elif command_split[0] in ["history", "y"]:
+            self._command_history = self._command_history[0:-1]
+            # Print the history if no entry was specified to run.
+            if len(command_split) == 1:
+                print('Command history: ')
+                for entry_index in range(-len(self._command_history), 0):
+                    print(' %3d) %s' % (abs(entry_index), self._command_history[entry_index]))
+            # Run a specified entry if desired.
+            else:
+                try:
+                    entry_num = int(command_split[1])
+                    self.process_commands(new_command=self._command_history[-entry_num])
+                except:
+                    print('Invalid history index specified')
+        elif command_split[0] == 'eval':
+            to_eval = command[command.index('eval ') + len('eval '):].strip()
+            try:
+              eval(to_eval)
+            except:
+              print('Error evaluating the following: [%s]', to_eval)
+        elif command in ["home", "h"]:
             self._rainbow_interface.move_to_home()
-        elif user_input in ["back", "b"]:
-            self._rainbow_interface.move_to_back()
-        elif user_input_split[0] in ["speed", "s"]:
-            if len(user_input_split) == 1:
+        elif command in ["back", "b"]:
+            if self._rainbow_interface.get_back_position() is None:
+                print('No back position was specified for this trajectory.')
+            else:
+                self._rainbow_interface.move_to_back()
+        elif command_split[0] in ["speed", "s"]:
+            if len(command_split) == 1:
                 print(
                     "Current speed reduction factor: %g" % self._speed_reduction_factor
                 )
             else:
                 try:
-                    self._speed_reduction_factor = float(user_input_split[1])
+                    self._speed_reduction_factor = float(command_split[1])
                 except:
                     print("Invalid speed specified")
                     return
                 # Print the result.
-                self.process_user_input("speed")
-        elif user_input_split[0] in ["data", "d"]:
-            if len(user_input_split) == 1:
+                self.process_commands("speed")
+        elif command_split[0] in ["data", "d"]:
+            if len(command_split) == 1:
                 print(f"Current data split: {self._split}")
             else:
                 try:
-                    self._split = str(user_input_split[1])
+                    self._split = str(command_split[1])
                 except:
                     print("Invalid data split specified")
                     return
                 # Print the result.
-                self.process_user_input("data")
-        elif user_input_split[0] in ["load", "l"]:
-            activity_type = user_input_split[1]
+                self.process_commands("data")
+        elif command_split[0] in ["load", "l"]:
+            activity_type = command_split[1]
             try:
-                trajectory_index = int(user_input_split[2])
+                trajectory_index = int(command_split[2])
             except:
                 print("Invalid trajectory index specified")
                 return
             if activity_type in ["pour", "p"]:
                 self.load_pouring_trajectory(trajectory_index)
-                self._previous_load_trajectory_command = user_input
+                self._previous_load_trajectory_command = command
             elif activity_type in ["scoop", "s"]:
                 self.load_scooping_trajectory(trajectory_index)
-                self._previous_load_trajectory_command = user_input
+                self._previous_load_trajectory_command = command
             elif activity_type in ["stir", "r"]:
                 self.load_stirring_trajectory(trajectory_index)
-                self._previous_load_trajectory_command = user_input
+                self._previous_load_trajectory_command = command
             else:
                 raise ValueError(f"Activity type {activity_type} not implemented.")
-        elif user_input_split[0] in ["time", "t"]:
+        elif command_split[0] in ["time", "t"]:
             try:
-                time_percent = float(user_input_split[1])
+                time_percent = float(command_split[1])
             except:
                 print("Invalid time ratio specified")
                 return
             if time_percent < 1:
                 time_percent = time_percent * 100
             self.move_to_trajectory_pose(time_percent / 100)
-        elif user_input_split[0] in ["run", "r"]:
-            self.run_trajectory()
-        elif user_input_split[0] in ["run fast", "rf"]:
-            self.run_trajectory(move_to_start=False)
-        elif user_input_split[0] in ["offset", "o"]:
-            if len(user_input_split) == 1:
+        elif command_split[0] in ["run", "r"]:
+            run_now = len(command_split) > 1 and command_split[1] in ['now', 'n']
+            plot_trajectory_tracking = False # not run_now
+            self.run_trajectory(move_to_start_and_prompt=not run_now, plot_trajectory_tracking=plot_trajectory_tracking)
+        elif command_split[0] in ["offset", "o"]:
+            if len(command_split) == 1:
                 print(
                     " Right gripper offset [m]:", self._right_gripper_offset_m.tolist()
                 )
@@ -1069,22 +1126,22 @@ class ExperimentInterface:
                     " Left  gripper offset [m]:", self._left_gripper_offset_m.tolist()
                 )
             else:
-                if user_input_split[1] in ["right", "r"]:
+                if command_split[1] in ["right", "r"]:
                     arms = ["right"]
-                elif user_input_split[1] in ["left", "l"]:
+                elif command_split[1] in ["left", "l"]:
                     arms = ["left"]
-                elif user_input_split[1] in ["right left", "rightleft", "rl", "both"]:
+                elif command_split[1] in ["right left", "rightleft", "rl", "both"]:
                     arms = ["right", "left"]
                 else:
                     print("Invalid arm side specified")
                     return
                 try:
-                    axis = ["x", "y", "z"].index(user_input_split[2])
+                    axis = ["x", "y", "z"].index(command_split[2])
                 except:
                     print("Invalid axis specified")
                     return
                 try:
-                    relative_offset_cm = float(user_input_split[3])
+                    relative_offset_cm = float(command_split[3])
                 except:
                     print("Invalid offset amount specified")
                     return
@@ -1093,18 +1150,40 @@ class ExperimentInterface:
                 if "left" in arms:
                     self._left_gripper_offset_m[axis] += relative_offset_cm / 100
                 # Reload the trajectory to apply the new offset.
-                self.process_user_input(self._previous_load_trajectory_command)
+                self.process_commands(self._previous_load_trajectory_command)
                 # Print the current offsets.
-                self.process_user_input("offset")
-        elif user_input_split[0] in ["pose", "p"]:
+                self.process_commands("offset")
+        elif command_split[0] in ["pose", "p"]:
             print("Right gripper pose:")
             print(self._rainbow_interface.get_pose("base", "ee_right").tolist())
             print("Left gripper pose:")
             print(self._rainbow_interface.get_pose("base", "ee_left").tolist())
             print("Torso pose:")
             print(self._rainbow_interface.get_pose("base", "link_torso_5").tolist())
-        elif user_input_split[0] in ["joints", "j"]:
+        elif command_split[0] in ["joints", "j"]:
             print(self._rainbow_interface.get_position())
+        elif command_split[0] in ["demo"]:
+            if command_split[1] == 'lemonade':
+                self._command_queue = [
+                  'speed 2.5',
+                  # Scoop
+                  'load scoop 13',
+                  'home',
+                  'run now',
+                  'back',
+                  'run now',
+                  'back',
+                  'run now',
+                  # Stir
+                  'load stir 8',
+                  'home',
+                  'run now',
+                  # Pour
+                  'eval input(">> Press Enter to pour ")',
+                  'load pour 2',
+                  'home',
+                  'run now',
+                ]
         else:
             print("Unknown menu option")
 
@@ -1123,14 +1202,14 @@ if __name__ == "__main__":
     experiment_interface.print_menu()
     previous_user_input = "m"
     print()
-    # experiment_interface.process_user_input("l p 1")
-    experiment_interface.process_user_input("l s 13")
-    # experiment_interface.process_user_input("l r 8")
+    # experiment_interface.process_user_input("load pour 1")
+    experiment_interface.process_commands("load scoop 13")
+    # experiment_interface.process_user_input("load stir 8")
     print()
     while True:
-        user_input = input("Enter command >> ").strip()
-        if len(user_input) == 0:
-            user_input = previous_user_input
-        previous_user_input = user_input
-        if experiment_interface.process_user_input(user_input) == "quit":
-            break
+        try:
+            if experiment_interface.process_commands() == "quit":
+                break
+        except:
+            traceback.print_exc()
+            print()
