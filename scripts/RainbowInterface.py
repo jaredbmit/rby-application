@@ -19,8 +19,8 @@ CONTROL_HOLD_TIME = 1e6
 
 # Cartesian Controller Presets
 MINIMUM_TIME = 3
-LINEAR_VELOCITY_LIMIT = 1.0
-ANGULAR_VELOCITY_LIMIT = np.pi
+LINEAR_VELOCITY_LIMIT = 3.0
+ANGULAR_VELOCITY_LIMIT = 3.0 * np.pi
 ACCELERATION_LIMIT = 1.0
 STOP_ORIENTATION_TRACKING_ERROR = 1e-4
 STOP_POSITION_TRACKING_ERROR = 1e-3
@@ -554,10 +554,9 @@ class RainbowInterface:
             iteration_start_time_s = time.time()
 
             if i == 0:
-                dt = 1
+                dt = 0.1
             else:
                 dt = float(t[i] - t[i - 1])
-            minimum_time = dt
 
             # Using optimal controller
             body_command = sdk.BodyComponentBasedCommandBuilder()
@@ -577,7 +576,6 @@ class RainbowInterface:
                         ANGULAR_VELOCITY_LIMIT,
                         ACCELERATION_LIMIT,
                     )
-                    .set_minimum_time(minimum_time)
                     .set_stop_orientation_tracking_error(
                         STOP_ORIENTATION_TRACKING_ERROR
                     )
@@ -599,7 +597,6 @@ class RainbowInterface:
                         ANGULAR_VELOCITY_LIMIT,
                         ACCELERATION_LIMIT,
                     )
-                    .set_minimum_time(minimum_time)
                     .set_stop_orientation_tracking_error(
                         STOP_ORIENTATION_TRACKING_ERROR
                     )
@@ -621,7 +618,6 @@ class RainbowInterface:
                         ANGULAR_VELOCITY_LIMIT,
                         ACCELERATION_LIMIT,
                     )
-                    .set_minimum_time(minimum_time)
                     .set_stop_orientation_tracking_error(
                         STOP_ORIENTATION_TRACKING_ERROR
                     )
