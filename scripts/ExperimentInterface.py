@@ -18,6 +18,7 @@ class ExperimentInterface:
         controller: str = "cartesian",
         simulation: bool = False,
         is_device_upc: bool = False,
+        data_folder: str = None,
     ):
         # Initialize the robot.
         if simulation:
@@ -34,14 +35,13 @@ class ExperimentInterface:
         )
 
         # Initialize data locations
-        data_folder = os.path.expanduser("~/drl/rby-application/data/")
+        if data_folder is None:
+          data_folder = os.path.expanduser("~/drl/rby-application/data/")
         trajectory_filename = model_name + "_inference.hdf5"
         self._model_name = model_name
-        self._pouring_trajectory_file = data_folder + "pouring/" + trajectory_filename
-        self._scooping_trajectory_file = (
-            data_folder + "scooping_powder/" + trajectory_filename
-        )
-        self._stirring_trajectory_file = data_folder + "stirring/" + trajectory_filename
+        self._pouring_trajectory_file = os.path.join(data_folder, 'pouring', trajectory_filename)
+        self._scooping_trajectory_file = os.path.join(data_folder, 'scooping_powder', trajectory_filename)
+        self._stirring_trajectory_file = os.path.join(data_folder, 'stirring', trajectory_filename)
 
         # Initialize state for the loaded trajectory.
         self._t = np.linspace(0, 10, num=100)  # Always the same
@@ -1198,6 +1198,7 @@ if __name__ == "__main__":
         controller="cartesian",
         simulation=True,
         is_device_upc=False,
+        data_folder=None,#os.path.realpath('../data'),
     )
     experiment_interface.print_menu()
     previous_user_input = "m"
