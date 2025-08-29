@@ -1276,7 +1276,7 @@ class ExperimentInterface:
 if __name__ == "__main__":
     experiment_interface = ExperimentInterface(
         model_name="linoss_im",
-        controller="cartesian",
+        controller="optimal",
         simulation=False,
         is_device_upc=True,
         data_folder=os.path.realpath('../data'),
