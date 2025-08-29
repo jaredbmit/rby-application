@@ -501,7 +501,9 @@ class ExperimentInterface:
         left_gripper_offset = np.array([-0.2, -0.1, -0.02])
         # Right side
         # NOTE: z points up, x points right, y points forward
-        pos_right_hand_to_pitcher_p = np.array([-0.03, 0.00, -0.18]) # before 2025-08-27: [0.06, -0.01, -0.16]
+        # NOTE: the z will be overriden by z_right_gripper below
+        pos_right_hand_to_pitcher_p = np.array([-0.03, 0.06, -0.22]) # before 2025-08-27: [0.06, -0.01, -0.16]
+        z_right_gripper = 1.07 # before 2025-08-27: 1.09
         rot_right_hand_to_pitcher = np.array(
             [
                 [0, 0, 1],
@@ -512,7 +514,6 @@ class ExperimentInterface:
         rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
         pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
         right_gripper_offset = np.array([-0.22, -0.2, -0.05])
-        z_right_gripper = 1.09
 
         # Load the trajectory data.
         with h5py.File(self._scooping_trajectory_file, "r") as f:
@@ -794,7 +795,9 @@ class ExperimentInterface:
         left_gripper_offset = np.array([-0.25, -0.1, 0])
         # Right side
         # NOTE: z points up, x points right, y points forward
-        pos_right_hand_to_pitcher_p = np.array([0.09, -0.05, -0.15]) # before 2025-08-27: [0.06, -0.01, -0.16]
+        # NOTE: the z will be overriden by z_right_gripper below
+        pos_right_hand_to_pitcher_p = np.array([0.09, 0.015, -0.14]) # before 2025-08-27: [0.06, -0.01, -0.16]
+        z_right_gripper = 1.09 # before 2025-08-27: 1.09
         rot_right_hand_to_pitcher = np.array(
             [
                 [0, 0, 1],
@@ -805,7 +808,6 @@ class ExperimentInterface:
         rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
         pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
         right_gripper_offset = np.array([-0.1, -0.2, -0.025])
-        z_right_gripper = 1.09
 
         # Load the trajectory data.
         with h5py.File(self._stirring_trajectory_file, "r") as f:
@@ -1240,6 +1242,7 @@ class ExperimentInterface:
             print(self._rainbow_interface.get_position())
         elif command_split[0] in ["demo"]:
             if command_split[1] == 'lemonade':
+                original_speed = self._speed_reduction_factor
                 self._command_queue = [
                   # Scoop
                   'speed 1.5',
@@ -1256,12 +1259,13 @@ class ExperimentInterface:
                   'back',
                   'run noprompt',
                   # Pour
-                  'eval input(">> Press Enter to pour ")',
-                  'load pour 2',
+                  'speed 1.5',
+                  'load pour 11',
                   'home',
+                  'eval input(">> Press Enter to pour ")',
                   'run noprompt',
                   # Clean up
-                  'speed 2.5',
+                  'speed %g' % original_speed,
                 ]
         else:
             print("Unknown menu option")
