@@ -1,21 +1,19 @@
-import rby1_sdk as sdk
+import sys
+import time
+import queue
 import numpy as np
 from scipy import interpolate
 import scipy.spatial.transform as tf
-import sys
-import time
 from typing import Optional
-import queue
+import rby1_sdk as sdk
 
 # Optimal Controller Presets
-WEIGHT = 0.1  # 1.0  # main parameter - higher will try to track better
-CENTERING_WEIGHT = 0.0005
-BODY_CENTERING_WEIGHT = 0.0005
+WEIGHT = 1.0 
+VELOCITY_LIMIT_SCALE = 0.5
 STOP_COST = WEIGHT * WEIGHT * 2e-3
-VELOCITY_LIMIT_SCALE = 1.0
 MIN_DELTA_COST = WEIGHT * WEIGHT * 2e-3
 PATIENCE = 10
-CONTROL_HOLD_TIME = 1e6
+CONTROL_HOLD_TIME = 100
 
 # Cartesian Controller Presets
 MINIMUM_TIME = 3
@@ -209,7 +207,7 @@ class RainbowInterface:
         return 0
 
     def move_to_pose(
-        self, T_right, T_left, T_torso, duration_s=4, controller_type="optimal"
+        self, T_right, T_left, T_torso, duration_s=3, controller_type="cartesian"
     ):
         dt_s = DT
         time_mini_s = np.arange(0, duration_s, dt_s)
@@ -250,7 +248,6 @@ class RainbowInterface:
 
         time.sleep(1)
 
-    # Main function 1
     def run_trajectory_and_record(
         self,
         t: np.ndarray,
@@ -258,7 +255,7 @@ class RainbowInterface:
         T_right: Optional[np.ndarray] = None,
         T_torso: Optional[np.ndarray] = None,
         speed_reduction_factor: Optional[float] = 1,
-        controller_type="optimal",
+        controller_type="cartesian",
     ):
         state_queue = queue.Queue()
 
@@ -345,7 +342,6 @@ class RainbowInterface:
             T_torso_cmd,
         )
 
-    # Main function 2
     def command_optimal_trajectory(
         self,
         t: np.ndarray,
@@ -365,9 +361,6 @@ class RainbowInterface:
             T_left (np.ndarray): (n, 4, 4) Pose sequence for the left end effector.
             T_right (np.ndarray): (n, 4, 4) Pose sequence for the right end effector.
             T_torso (np.ndarray): (n, 4, 4) Pose sequence for the torso.
-
-        Returns:
-            (int): 1 if failure, 0 if success or unknown.
         """
 
         # Re-interpolate to adjust the speed.
@@ -382,12 +375,12 @@ class RainbowInterface:
             T_torso = interpolate_trajectory(time_in, time_out, T_torso)
         t = time_out
 
-        duration = int(max(t)) + 4
+        duration = int(max(t))
         stream = self.robot.create_command_stream(duration)
         timestamps = []
 
         for i in range(len(t)):
-            if i % round(len(t) / 100) == 0:
+            if i % round(len(t) / 10) == 0:
                 print(
                     "Commanding timestep index %4d/%d (%5.1f%%)"
                     % (i, len(t) - 1, 100 * i / (len(t) - 1))
@@ -395,7 +388,7 @@ class RainbowInterface:
             iteration_start_time_s = time.time()
 
             if i == 0:
-                dt = 1
+                dt = 0.1
             else:
                 dt = float(t[i] - t[i - 1])
 
@@ -405,67 +398,8 @@ class RainbowInterface:
                 .set_command_header(
                     sdk.CommandHeaderBuilder().set_control_hold_time(CONTROL_HOLD_TIME)
                 )
-                .add_joint_position_target(
-                    "torso_0", self._q_home_position[0], BODY_CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "torso_1", self._q_home_position[1], BODY_CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "torso_2", self._q_home_position[2], BODY_CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "torso_3", self._q_home_position[3], BODY_CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "torso_4", self._q_home_position[4], BODY_CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "torso_5", self._q_home_position[5], BODY_CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "right_arm_0", self._q_home_position[6], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "right_arm_1", self._q_home_position[7], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "right_arm_2", self._q_home_position[8], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "right_arm_3", self._q_home_position[9], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "right_arm_4", self._q_home_position[10], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "right_arm_5", self._q_home_position[11], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "right_arm_6", self._q_home_position[12], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "left_arm_0", self._q_home_position[13], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "left_arm_1", self._q_home_position[14], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "left_arm_2", self._q_home_position[15], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "left_arm_3", self._q_home_position[16], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "left_arm_4", self._q_home_position[17], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "left_arm_5", self._q_home_position[18], CENTERING_WEIGHT
-                )
-                .add_joint_position_target(
-                    "left_arm_6", self._q_home_position[19], CENTERING_WEIGHT
-                )
                 .set_velocity_limit_scaling(VELOCITY_LIMIT_SCALE)
+                .set_error_scaling(1.5)
                 .set_stop_cost(STOP_COST)
                 .set_min_delta_cost(MIN_DELTA_COST)
                 .set_patience(PATIENCE)
@@ -491,12 +425,10 @@ class RainbowInterface:
             )
 
             rv = stream.send_command(rc)
-            print(rv)
 
             timestamps.append(time.perf_counter())
 
             delay_duration_s = dt - (time.time() - iteration_start_time_s)
-            print(delay_duration_s)
             if delay_duration_s > 0:
                 time.sleep(delay_duration_s)
 
@@ -518,7 +450,7 @@ class RainbowInterface:
     ):
         """
         Commands a trajectory for the 3 main body components
-        using RB-Y1's optimal controller.
+        using RB-Y1's cartesian controller.
 
         Note: Assumes the robot is already at the initial pose!
 
@@ -527,9 +459,6 @@ class RainbowInterface:
             T_left (np.ndarray): (n, 4, 4) Pose sequence for the left end effector.
             T_right (np.ndarray): (n, 4, 4) Pose sequence for the right end effector.
             T_torso (np.ndarray): (n, 4, 4) Pose sequence for the torso.
-
-        Returns:
-            (int): 1 if failure, 0 if success or unknown.
         """
 
         # Re-interpolate to adjust the speed.
@@ -541,7 +470,7 @@ class RainbowInterface:
         T_torso = interpolate_trajectory(time_in, time_out, T_torso)
         t = time_out
 
-        duration = int(max(t)) + 4
+        duration = int(max(t))
         stream = self.robot.create_command_stream(duration)
         timestamps = []
 
