@@ -64,6 +64,11 @@ class ExperimentInterface:
     def load_pouring_trajectory(self, trajectory_index):
 
         print(f"Loading pouring trajectory {trajectory_index} of split {self._split}")
+        
+        if trajectory_index in [6, 9]:
+            user_input = input('This trajectory was marked as UNSAFE in simulation. Do you want to continue? [y/N]: ')
+            if user_input.lower() != 'y':
+                return
 
         # Define the home positions.
         BEND_ANGLE = 10
@@ -338,6 +343,11 @@ class ExperimentInterface:
     def load_scooping_trajectory(self, trajectory_index):
 
         print(f"Loading scooping trajectory {trajectory_index} of split {self._split}")
+        
+        if trajectory_index not in [13]:
+            user_input = input('This trajectory is not one that was recommended after simulation. Do you want to continue? [y/N]: ')
+            if user_input.lower() != 'y':
+                return
 
         # Define the home positions.
         BEND_ANGLE = 10
@@ -624,7 +634,12 @@ class ExperimentInterface:
     def load_stirring_trajectory(self, trajectory_index):
 
         print(f"Loading stirring trajectory {trajectory_index} of split {self._split}")
-
+        
+        if trajectory_index not in [8]:
+            user_input = input('This trajectory is not one that was recommended after simulation. Do you want to continue? [y/N]: ')
+            if user_input.lower() != 'y':
+                return
+          
         # Define the home positions.
         BEND_ANGLE = 10
         self._rainbow_interface.set_home_position(
@@ -1115,7 +1130,7 @@ class ExperimentInterface:
             self.move_to_trajectory_pose(time_percent / 100)
         elif command_split[0] in ["run", "r"]:
             run_now = len(command_split) > 1 and command_split[1] in ['now', 'n']
-            plot_trajectory_tracking = False # not run_now
+            plot_trajectory_tracking = True # not run_now
             self.run_trajectory(move_to_start_and_prompt=not run_now, plot_trajectory_tracking=plot_trajectory_tracking)
         elif command_split[0] in ["offset", "o"]:
             if len(command_split) == 1:
@@ -1186,6 +1201,7 @@ class ExperimentInterface:
                 ]
         else:
             print("Unknown menu option")
+            self._command_history = self._command_history[0:-1]
 
 
 ################################################

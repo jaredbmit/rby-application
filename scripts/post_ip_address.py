@@ -28,7 +28,7 @@
 
 #######################################
 # Sample cron entry to run this script:
-# @reboot sleep 30 && (/home/nvidia/miniconda3/bin/python /home/nvidia/drl/rby-application/scripts/post_ip_address.py > /home/nvidia/drl/post_ip_address_output.txt)
+# @reboot sleep 30 && (/home/nvidia/miniconda3/bin/python /home/nvidia/drl/rby-application/scripts/post_ip_address.py > /home/nvidia/drl/rby-application/scripts/post_ip_address_output.txt)
 #######################################
 
 import time
