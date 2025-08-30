@@ -16,7 +16,6 @@ class ExperimentInterface:
     def __init__(
         self,
         model_name: str = "linoss_im",
-        controller: str = "cartesian",
         simulation: bool = False,
         is_device_upc: bool = False,
         data_folder: str = None,
@@ -61,7 +60,7 @@ class ExperimentInterface:
         self._previous_load_trajectory_command = None
 
         # self._controller_type = "cartesian"
-        self._controller_type = controller
+        self._controller_type = 'cartesian'
 
     def load_pouring_trajectory(self, trajectory_index):
 
@@ -203,7 +202,8 @@ class ExperimentInterface:
         rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
         # pos_right_hand_to_right_gripper_RG = np.array([-0.065, -0.075, 0.08])
         pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
-        right_gripper_offset = np.array([0, 0, 0])
+        # NOTE: z points up, x points right, y points forward
+        right_gripper_offset = np.array([0, 0, 0]) # before 2025-08-29: [0, 0, 0]
 
         rot_left_hand_to_left_gripper = np.eye(3)  # TODO
         # pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
@@ -336,7 +336,10 @@ class ExperimentInterface:
             repeats=n,
             axis=0,
         )
-
+        
+        # Specify the type of controller to use.
+        self._controller_type = 'cartesian'
+        
         # Store the loaded trajectory.
         self._T_left = T_left
         self._T_right = T_right
@@ -502,8 +505,8 @@ class ExperimentInterface:
         # Right side
         # NOTE: z points up, x points right, y points forward
         # NOTE: the z will be overriden by z_right_gripper below
-        pos_right_hand_to_pitcher_p = np.array([-0.03, 0.06, -0.22]) # before 2025-08-27: [0.06, -0.01, -0.16]
-        z_right_gripper = 1.07 # before 2025-08-27: 1.09
+        pos_right_hand_to_pitcher_p = np.array([-0.04, 0.06, -0.22]) # before 2025-08-27: [0.06, -0.01, -0.16]
+        z_right_gripper = 1.04 # before 2025-08-27: 1.09
         rot_right_hand_to_pitcher = np.array(
             [
                 [0, 0, 1],
@@ -629,7 +632,10 @@ class ExperimentInterface:
             repeats=n,
             axis=0,
         )
-
+        
+        # Specify the type of controller to use.
+        self._controller_type = 'cartesian'
+        
         # Store the loaded trajectory.
         self._T_left = T_left
         self._T_right = T_right
@@ -796,7 +802,7 @@ class ExperimentInterface:
         # Right side
         # NOTE: z points up, x points right, y points forward
         # NOTE: the z will be overriden by z_right_gripper below
-        pos_right_hand_to_pitcher_p = np.array([0.09, 0.015, -0.14]) # before 2025-08-27: [0.06, -0.01, -0.16]
+        pos_right_hand_to_pitcher_p = np.array([0.10, 0.015, -0.14]) # before 2025-08-27: [0.06, -0.01, -0.16]
         z_right_gripper = 1.09 # before 2025-08-27: 1.09
         rot_right_hand_to_pitcher = np.array(
             [
@@ -923,7 +929,10 @@ class ExperimentInterface:
             repeats=n,
             axis=0,
         )
-
+        
+        # Specify the type of controller to use.
+        self._controller_type = 'cartesian'
+        
         # Store the loaded trajectory.
         self._T_left = T_left
         self._T_right = T_right
@@ -947,14 +956,18 @@ class ExperimentInterface:
             duration_s=duration_s,
         )
 
-    def run_trajectory(self, move_to_start_pose=True, prompt_after_start_pose=True, fast_start_pose=False, plot_trajectory_tracking=True):
+    def run_trajectory(self, move_to_start_pose=True, prompt_after_start_pose=True, fast_start_pose=False,
+                       controller_type=None,
+                       plot_trajectory_tracking=True):
         if self._t is None or self._T_right is None or self._T_left is None:
             return
 
         # Command starting pose
         if move_to_start_pose:
-            print("Navigating to the starting pose")
-            self.move_to_trajectory_pose(time_ratio=0, duration_s=1 if fast_start_pose else 4)
+            for i in range(1):
+                print("Navigating to the starting pose")
+                self.move_to_trajectory_pose(time_ratio=0, duration_s=1 if fast_start_pose else 4)
+        print('CONTROLLER TYPE:', self._controller_type if controller_type is None else controller_type)
         # Wait if desired
         if prompt_after_start_pose:
             user_input = input("Press Enter to run the trajectory, or c to cancel >> ")
@@ -988,7 +1001,7 @@ class ExperimentInterface:
             T_right=self._T_right,
             T_torso=self._T_torso,
             speed_reduction_factor=self._speed_reduction_factor,
-            controller_type=self._controller_type,
+            controller_type=self._controller_type if controller_type is None else controller_type,
         )
         print("Trajectory finished.")
         # time.sleep(1)
@@ -1259,8 +1272,8 @@ class ExperimentInterface:
                   'back',
                   'run noprompt',
                   # Pour
-                  'speed 1.5',
-                  'load pour 11',
+                  'speed 3',
+                  'load pour 5',
                   'home',
                   'eval input(">> Press Enter to pour ")',
                   'run noprompt',
@@ -1280,7 +1293,6 @@ class ExperimentInterface:
 if __name__ == "__main__":
     experiment_interface = ExperimentInterface(
         model_name="linoss_im",
-        controller="optimal",
         simulation=False,
         is_device_upc=True,
         data_folder=os.path.realpath('../data'),

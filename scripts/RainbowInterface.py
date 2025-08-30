@@ -487,7 +487,7 @@ class RainbowInterface:
             else:
                 dt = float(t[i] - t[i - 1])
 
-            # Using optimal controller
+            # Using cartesian controller
             body_command = sdk.BodyComponentBasedCommandBuilder()
             if T_torso is not None:
                 body_command.set_torso_command(
