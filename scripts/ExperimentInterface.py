@@ -505,8 +505,8 @@ class ExperimentInterface:
         # Right side
         # NOTE: z points up, x points right, y points forward
         # NOTE: the z will be overriden by z_right_gripper below
-        pos_right_hand_to_pitcher_p = np.array([-0.04, 0.06, -0.22]) # before 2025-08-27: [0.06, -0.01, -0.16]
-        z_right_gripper = 1.04 # before 2025-08-27: 1.09
+        pos_right_hand_to_pitcher_p = np.array([-0.04, 0.05, -0.22]) # before 2025-08-27: [0.06, -0.01, -0.16]
+        z_right_gripper = 1.07 # before 2025-08-27: 1.09
         rot_right_hand_to_pitcher = np.array(
             [
                 [0, 0, 1],
@@ -802,8 +802,8 @@ class ExperimentInterface:
         # Right side
         # NOTE: z points up, x points right, y points forward
         # NOTE: the z will be overriden by z_right_gripper below
-        pos_right_hand_to_pitcher_p = np.array([0.10, 0.015, -0.14]) # before 2025-08-27: [0.06, -0.01, -0.16]
-        z_right_gripper = 1.09 # before 2025-08-27: 1.09
+        pos_right_hand_to_pitcher_p = np.array([0.10, 0.013, -0.14]) # before 2025-08-27: [0.06, -0.01, -0.16]
+        z_right_gripper = 1.18 # before 2025-08-27: 1.09
         rot_right_hand_to_pitcher = np.array(
             [
                 [0, 0, 1],
@@ -1264,15 +1264,15 @@ class ExperimentInterface:
                   'run noprompt faststartpose',
                   # 'back',
                   # 'run noprompt faststartpose',
-                  'back',
-                  'run noprompt faststartpose',
+                  # 'back',
+                  # 'run noprompt faststartpose',
                   # Stir
                   'speed 1.5',
                   'load stir 8',
                   'back',
                   'run noprompt',
                   # Pour
-                  'speed 3',
+                  'speed 7',
                   'load pour 5',
                   'home',
                   'eval input(">> Press Enter to pour ")',
