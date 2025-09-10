@@ -15,7 +15,7 @@ D2R = np.pi / 180
 class ExperimentInterface:
     def __init__(
         self,
-        model_name: str = "linoss_im",
+        model_name: str = "lstm_stack",
         simulation: bool = False,
         is_device_upc: bool = False,
         data_folder: str = None,
@@ -66,10 +66,10 @@ class ExperimentInterface:
 
         print(f"Loading pouring trajectory {trajectory_index} of split {self._split}")
         
-        if trajectory_index in [6, 9]:
-            user_input = input('This trajectory was marked as UNSAFE in simulation. Do you want to continue? [y/N]: ')
-            if user_input.lower() != 'y':
-                return
+        # if trajectory_index in [6, 9]:
+        #     user_input = input('This trajectory was marked as UNSAFE in simulation. Do you want to continue? [y/N]: ')
+        #     if user_input.lower() != 'y':
+        #         return
 
         # Define the home positions.
         BEND_ANGLE = 10
@@ -225,7 +225,7 @@ class ExperimentInterface:
                 print(
                     f"Trajectory index {trajectory_index} of split {self._split} does not exist"
                 )
-                return
+                raise AssertionError(f"Trajectory index {trajectory_index} does not exist")
 
             data = trajectory["data"]
             ref = trajectory["reference"]
@@ -344,15 +344,19 @@ class ExperimentInterface:
         self._T_left = T_left
         self._T_right = T_right
         self._T_torso = T_torso
+        # Save the trajectory.
+        np.save('T_right', T_right)
+        np.save('T_left', T_left)
+        np.save('T_torso', T_torso)
 
     def load_scooping_trajectory(self, trajectory_index):
 
         print(f"Loading scooping trajectory {trajectory_index} of split {self._split}")
         
-        if trajectory_index not in [13]:
-            user_input = input('This trajectory is not one that was recommended after simulation. Do you want to continue? [y/N]: ')
-            if user_input.lower() != 'y':
-                return
+        # if trajectory_index not in [13]:
+        #     user_input = input('This trajectory is not one that was recommended after simulation. Do you want to continue? [y/N]: ')
+        #     if user_input.lower() != 'y':
+        #         return
 
         # Define the home positions.
         BEND_ANGLE = 10
@@ -531,7 +535,7 @@ class ExperimentInterface:
                 print(
                     f"Trajectory index {trajectory_index} of split {self._split} does not exist"
                 )
-                return
+                raise AssertionError(f"Trajectory index {trajectory_index} does not exist")
 
             data = trajectory["data"]
             ref = trajectory["reference"]
@@ -645,10 +649,10 @@ class ExperimentInterface:
 
         print(f"Loading stirring trajectory {trajectory_index} of split {self._split}")
         
-        if trajectory_index not in [8]:
-            user_input = input('This trajectory is not one that was recommended after simulation. Do you want to continue? [y/N]: ')
-            if user_input.lower() != 'y':
-                return
+        # if trajectory_index not in [8]:
+        #     user_input = input('This trajectory is not one that was recommended after simulation. Do you want to continue? [y/N]: ')
+        #     if user_input.lower() != 'y':
+        #         return
           
         # Define the home positions.
         BEND_ANGLE = 10
@@ -828,7 +832,7 @@ class ExperimentInterface:
                 print(
                     f"Trajectory index {trajectory_index} of split {self._split} does not exist"
                 )
-                return
+                raise AssertionError(f"Trajectory index {trajectory_index} does not exist")
 
             data = trajectory["data"]
             ref = trajectory["reference"]
@@ -1293,8 +1297,8 @@ class ExperimentInterface:
 if __name__ == "__main__":
     experiment_interface = ExperimentInterface(
         model_name="linoss_im",
-        simulation=False,
-        is_device_upc=True,
+        simulation=True,
+        is_device_upc=False,
         data_folder=os.path.realpath('../data'),
     )
     experiment_interface.print_menu()

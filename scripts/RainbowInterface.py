@@ -78,11 +78,11 @@ class RainbowInterface:
 
         if not self.robot.connect():
             print("Error: Unable to establish connection to the robot.")
-            sys.exit(1)
+            raise AssertionError("Error: Unable to establish connection to the robot.")
 
         if not self.robot.is_connected():
             print("Robot is not connected.")
-            exit(1)
+            raise AssertionError("Robot is not connected.")
 
         # Turn on the robot power
         if not self.robot.is_power_on(power_device):
