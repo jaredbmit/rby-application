@@ -16,6 +16,7 @@ class ExperimentInterface:
     def __init__(
         self,
         model_name: str = "lstm_stack",
+        use_human_trajectories=False,
         simulation: bool = False,
         is_device_upc: bool = False,
         data_folder: str = None,
@@ -35,13 +36,11 @@ class ExperimentInterface:
         )
 
         # Initialize data locations
-        if data_folder is None:
-          data_folder = os.path.expanduser("~/drl/rby-application/data/")
-        trajectory_filename = model_name + "_inference.hdf5"
-        self._model_name = model_name
-        self._pouring_trajectory_file = os.path.join(data_folder, 'pouring', trajectory_filename)
-        self._scooping_trajectory_file = os.path.join(data_folder, 'scooping_powder', trajectory_filename)
-        self._stirring_trajectory_file = os.path.join(data_folder, 'stirring', trajectory_filename)
+        self._data_folder = data_folder
+        if self._data_folder is None:
+            self._data_folder = os.path.expanduser("~/drl/rby-application/data/")
+        self._use_human_trajectories = use_human_trajectories
+        self.update_model_selection(model_name)
 
         # Initialize state for the loaded trajectory.
         self._t = np.linspace(0, 10, num=100)  # Always the same
@@ -62,9 +61,24 @@ class ExperimentInterface:
         # self._controller_type = "cartesian"
         self._controller_type = 'cartesian'
 
+    def update_model_selection(self, model_name):
+        trajectory_filename = model_name + "_inference.hdf5"
+        self._pouring_trajectory_file = os.path.join(self._data_folder, 'pouring', trajectory_filename)
+        self._scooping_trajectory_file = os.path.join(self._data_folder, 'scooping_powder', trajectory_filename)
+        self._stirring_trajectory_file = os.path.join(self._data_folder, 'stirring', trajectory_filename)
+        self._model_name = model_name
+        print('Using the following trajectory files:')
+        print('  Pouring : %s' % self._pouring_trajectory_file)
+        print('  Scooping: %s' % self._scooping_trajectory_file)
+        print('  Stirring: %s' % self._stirring_trajectory_file)
+        print('Using human paths? %s' % ('Yes' if self._use_human_trajectories else 'No'))
+        print('*** Remember to now load a trajectory ***')
+      
     def load_pouring_trajectory(self, trajectory_index):
 
         print(f"Loading pouring trajectory {trajectory_index} of split {self._split}")
+        if self._use_human_trajectories:
+            print(' ** Using human trajectories')
         
         # if trajectory_index in [6, 9]:
         #     user_input = input('This trajectory was marked as UNSAFE in simulation. Do you want to continue? [y/N]: ')
@@ -209,6 +223,7 @@ class ExperimentInterface:
         # pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
         pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.175])
         left_gripper_theta = np.pi / 6
+        # NOTE: z points up, x points right, y points forward
         left_gripper_offset = np.array([0, 0, -0.12])
 
         # Load the trajectory data.
@@ -226,19 +241,21 @@ class ExperimentInterface:
                     f"Trajectory index {trajectory_index} of split {self._split} does not exist"
                 )
                 raise AssertionError(f"Trajectory index {trajectory_index} does not exist")
-
-            data = trajectory["data"]
+            
             ref = trajectory["reference"]
-            # pos_human_to_right_hand_H = np.array(data["pos_human_to_right_hand_H"])
-            # rot_human_to_right_hand = np.array(data["rot_human_to_right_hand"]).reshape(
-            #     (-1, 3, 3)
-            # )
-            truth = trajectory["truth"]
-            pos_human_to_right_hand_H = np.array(truth["pos_human_to_right_hand_H"])
-            rot_human_to_right_hand = np.array(
-                truth["rot_human_to_right_hand"]
-            ).reshape((-1, 3, 3))
             pos_human_to_glass_rim_H = np.array(ref["pos_human_to_glass_rim_H"])
+            if not self._use_human_trajectories:
+                data = trajectory["data"]
+                pos_human_to_right_hand_H = np.array(data["pos_human_to_right_hand_H"])
+                rot_human_to_right_hand = np.array(data["rot_human_to_right_hand"]).reshape(
+                    (-1, 3, 3)
+                )
+            else:
+                truth = trajectory["truth"]
+                pos_human_to_right_hand_H = np.array(truth["pos_human_to_right_hand_H"])
+                rot_human_to_right_hand = np.array(
+                    truth["rot_human_to_right_hand"]
+                ).reshape((-1, 3, 3))
             n = len(pos_human_to_right_hand_H)
 
         # Right gripper rotation trajectory
@@ -352,6 +369,8 @@ class ExperimentInterface:
     def load_scooping_trajectory(self, trajectory_index):
 
         print(f"Loading scooping trajectory {trajectory_index} of split {self._split}")
+        if self._use_human_trajectories:
+            print(' ** Using human trajectories')
         
         # if trajectory_index not in [13]:
         #     user_input = input('This trajectory is not one that was recommended after simulation. Do you want to continue? [y/N]: ')
@@ -537,14 +556,21 @@ class ExperimentInterface:
                 )
                 raise AssertionError(f"Trajectory index {trajectory_index} does not exist")
 
-            data = trajectory["data"]
             ref = trajectory["reference"]
-            pos_human_to_left_hand_H = np.array(data["pos_human_to_left_hand_H"])
-            rot_human_to_left_hand = np.array(data["rot_human_to_left_hand"]).reshape(
-                (-1, 3, 3)
-            )
             pos_human_to_pitcher_H = np.array(ref["pos_human_to_pitcher_H"])
             angle_human_to_pitcher = np.array(ref["angle_human_to_pitcher"])
+            if not self._use_human_trajectories:
+                data = trajectory["data"]
+                pos_human_to_left_hand_H = np.array(data["pos_human_to_left_hand_H"])
+                rot_human_to_left_hand = np.array(data["rot_human_to_left_hand"]).reshape(
+                    (-1, 3, 3)
+                )
+            else:
+                truth = trajectory["truth"]
+                pos_human_to_left_hand_H = np.array(truth["pos_human_to_left_hand_H"])
+                rot_human_to_left_hand = np.array(truth["rot_human_to_left_hand"]).reshape(
+                    (-1, 3, 3)
+                )
             n = len(pos_human_to_left_hand_H)
 
         # Left gripper rotation trajectory
@@ -648,6 +674,8 @@ class ExperimentInterface:
     def load_stirring_trajectory(self, trajectory_index):
 
         print(f"Loading stirring trajectory {trajectory_index} of split {self._split}")
+        if self._use_human_trajectories:
+            print(' ** Using human trajectories')
         
         # if trajectory_index not in [8]:
         #     user_input = input('This trajectory is not one that was recommended after simulation. Do you want to continue? [y/N]: ')
@@ -834,14 +862,21 @@ class ExperimentInterface:
                 )
                 raise AssertionError(f"Trajectory index {trajectory_index} does not exist")
 
-            data = trajectory["data"]
             ref = trajectory["reference"]
-            pos_human_to_left_hand_H = np.array(data["pos_human_to_left_hand_H"])
-            rot_human_to_left_hand = np.array(data["rot_human_to_left_hand"]).reshape(
-                (-1, 3, 3)
-            )
             pos_human_to_pitcher_H = np.array(ref["pos_human_to_pitcher_H"])
             angle_human_to_pitcher = np.array(ref["angle_human_to_pitcher"])
+            if not self._use_human_trajectories:
+                data = trajectory["data"]
+                pos_human_to_left_hand_H = np.array(data["pos_human_to_left_hand_H"])
+                rot_human_to_left_hand = np.array(data["rot_human_to_left_hand"]).reshape(
+                    (-1, 3, 3)
+                )
+            else:
+                truth = trajectory["truth"]
+                pos_human_to_left_hand_H = np.array(truth["pos_human_to_left_hand_H"])
+                rot_human_to_left_hand = np.array(truth["rot_human_to_left_hand"]).reshape(
+                    (-1, 3, 3)
+                )
             n = len(pos_human_to_left_hand_H)
 
         # Left gripper rotation trajectory
@@ -1073,8 +1108,9 @@ class ExperimentInterface:
             menu [m]                                 : Print this menu
             home [h]                                 : Go to home position
             speed # [s #]                            : Set trajectory playback speed reduction factor
-            data train/val/test [d train/val/test]   : Set trajectory data split
             load pour/scoop/stir # [l p/s/r #]       : Load trajectory index #
+            split train/val/test [l train/val/test]  : Set trajectory data split
+            model model/human                        : Set the model to use (or human), or blank to list
             time # [t #]                             : Move to the pose at time percent # (0-100)
             run [r] (noprompt, nostartpose, faststartpose): Run the trajectory, with optional qualifiers
             back [b]                                 : Move to a preset back position (if specified)
@@ -1166,7 +1202,7 @@ class ExperimentInterface:
                     return
                 # Print the result.
                 self.process_commands("speed")
-        elif command_split[0] in ["data", "d"]:
+        elif command_split[0] in ["split", "l"]:
             if len(command_split) == 1:
                 print(f"Current data split: {self._split}")
             else:
@@ -1176,7 +1212,37 @@ class ExperimentInterface:
                     print("Invalid data split specified")
                     return
                 # Print the result.
-                self.process_commands("data")
+                self.process_commands("split")
+        elif command_split[0] in ["model"]:
+            if len(command_split) == 1:
+                model_files = os.listdir(os.path.join(self._data_folder, 'pouring'))
+                model_options = [model_file.replace('_inference.hdf5', '') for model_file in model_files]
+                print('Available options (* is the current)')
+                for model_option in model_options:
+                    if self._model_name == model_option:
+                        print(' * ', end='')
+                    else:
+                        print('   ', end='')
+                    print(model_option, end='')
+                    if self._model_name == model_option and self._use_human_trajectories:
+                        print(' [* human trajectories]')
+                    else:
+                        print()
+            else:
+                try:
+                    model_selection = str(command_split[1])
+                    if model_selection == 'human':
+                        self._use_human_trajectories = True
+                        # Note that the model does not need to change,
+                        # since all model files have the same human trajectories.
+                    else:
+                        self._use_human_trajectories = False
+                        self.update_model_selection(model_selection)
+                except:
+                    print("Invalid model specified")
+                    return
+                # Print the result.
+                self.process_commands("model")
         elif command_split[0] in ["load", "l"]:
             activity_type = command_split[1]
             try:
@@ -1299,7 +1365,7 @@ if __name__ == "__main__":
         model_name="linoss_im",
         simulation=True,
         is_device_upc=False,
-        data_folder=os.path.realpath('../data'),
+        data_folder=None,#os.path.realpath('../data'),
     )
     experiment_interface.print_menu()
     previous_user_input = "m"

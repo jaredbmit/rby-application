@@ -13,13 +13,51 @@ import subprocess
 from RainbowInterface import RainbowInterface
 from ExperimentInterface import ExperimentInterface
 
-data_root_dir = os.path.join('..', 'data')
+from pathlib import Path
+# Find the "data" folder by searching up and down from the current folder.
+data_root_dir = None
+current_dir = Path(__file__).resolve().parent
+for p in current_dir.rglob("*"):
+  if p.is_dir() and p.name == "data":
+    data_root_dir = p.resolve()
+if data_root_dir is None:
+  parent = current_dir
+  for _ in range(5):
+    data_root_dir = parent/"data"
+    if data_root_dir.exists() and data_root_dir.is_dir():
+      data_root_dir = data_root_dir.resolve()
+      break
+    else:
+      data_root_dir = None
+    parent = parent.parent
+experiments_root_dir = os.path.join(data_root_dir, 'best_experiments')
 
 output_filepath = 'simulation_results.csv'
-fout = open(output_filepath, 'w')
-fout.write('\nmodel,task,trial,success')
-fout.close()
-
+if not os.path.exists(output_filepath):
+  # Create the file and write the headers.
+  fout = open(output_filepath, 'a')
+  fout.write('simulation_start_time,model,task,trial_index,success 1,success 2,success 3')
+  fout.close()
+else:
+  # Read existing contents.
+  fout = open(output_filepath, 'r')
+  lines = fout.readlines()
+  fout.close()
+  fout = open(output_filepath, 'w')
+  # write the headers
+  fout.write(lines[0].strip())
+  lines = lines[1:]
+  # write back complete lines
+  for line in lines:
+    line_entries = [x.strip() for x in line.split(',')]
+    print('see line entries:', line_entries)
+    if len(line_entries) < 5:
+      continue
+    if len(line_entries) < 7 and '1' not in line_entries[4:]:
+      continue
+    fout.write('\n' + line.strip())
+  fout.close()
+  
 # # Kill any lingering processes from previous runs.
 # print('killing past processes')
 def wait_for_docker_shutdown(timeout_s=30, poll_interval_s=1):
@@ -72,7 +110,7 @@ def wait_for_docker_startup(timeout_s=30, poll_interval_s=1):
 # Start a thread to continuously make sure the docker is running.
 DOCKER_CMD = [
     "sudo", "docker", "run", "--rm",
-    "-e", "DISPLAY=128.30.27.86:0",
+    "-e", "DISPLAY=128.30.9.6:0",
     "-v", "/tmp/.X11-unix:/tmp/.X11-unix",
     "-p", "50051:50051",
     "rainbowroboticsofficial/rby1-sim"
@@ -93,6 +131,7 @@ def run_docker():
       wait_for_docker_startup(timeout_s=30)
       time.sleep(5)
       print('docker is launched!')
+      restart_docker = False
       docker_is_running = True
       # Poll until it finishes or a stop/restart flag is set
       while proc.poll() is None and not stop_docker_thread and not restart_docker:
@@ -125,7 +164,7 @@ docker_thread = threading.Thread(target=run_docker, daemon=True)
 docker_thread.start()
 
 # Loop through each task, model, and trial to simulate it.
-for task in os.listdir(data_root_dir):
+for task in sorted(os.listdir(data_root_dir)):
   task_dir = os.path.join(data_root_dir, task)
   if task == 'scooping_powder':
     task_name_for_trajectory_loading = 'scoop'
@@ -133,20 +172,42 @@ for task in os.listdir(data_root_dir):
     task_name_for_trajectory_loading = 'pour'
   if task == 'stirring':
     task_name_for_trajectory_loading = 'stir'
-  for model_filename in os.listdir(task_dir):
-    model_filename = os.path.join(task_dir, model_filename)
-    model = os.path.basename(model_filename).replace('_inference.hdf5', '')
+  # model_filenames = ['human']
+  model_filenames = sorted(os.listdir(task_dir)) + ['human']
+  for model_filename in model_filenames:
+    use_human_trajectories = model_filename == 'human'
+    if not use_human_trajectories:
+      model_filepath = os.path.join(task_dir, model_filename)
+      model = model_filename.replace('_inference.hdf5', '')
+    else:
+      model_filename = sorted(os.listdir(task_dir))[0] # can use any model since they all have the same human trajectories
+      model_filepath = os.path.join(task_dir, model_filename)
+      model = os.path.basename(model_filename).replace('_inference.hdf5', '')
     experiment_interface = None
     # Loop through trial indexes until one doesn't exist.
     reached_end_of_test_set = False
     for trial_index in range(1000):
+      # Check if already finished the test set.
       if reached_end_of_test_set:
         break
-      # Start a line in the results file for this trial.
-      fout = open(output_filepath, 'a')
-      fout.write('\n%s,%s,%2d' % (model, task, trial_index))
-      fout.close()
-      # Initialize stopping criteria state.
+      # Check if the output file already contains results for this trial.
+      trial_results_exist = False
+      fin = open(output_filepath, 'r')
+      for line in fin.readlines():
+        try:
+          line_split = line.split()
+          (timestamp, fin_model, fin_task, fin_trial_index, *_) = line.split(',')
+          if (use_human_trajectories and fin_model == 'human') or (not use_human_trajectories and fin_model == model):
+            if fin_task == task and int(fin_trial_index) == trial_index:
+              trial_results_exist = True
+              break
+        except:
+          pass
+      fin.close()
+      if trial_results_exist:
+        continue
+      # Initialize state and stopping criteria state.
+      started_output_line = False
       attempt_counter = 0
       simulation_success = False
       # Try to simulate a few times or until success.
@@ -159,6 +220,7 @@ for task in os.listdir(data_root_dir):
           try:
             experiment_interface = ExperimentInterface(
                 model_name=model,
+                use_human_trajectories=use_human_trajectories,
                 simulation=True,
                 is_device_upc=False,
                 data_folder=None, #os.path.realpath('../data'),
@@ -169,7 +231,18 @@ for task in os.listdir(data_root_dir):
             time.sleep(1)
         # Load the trajectory.
         try:
+          experiment_interface.process_commands("model %s" % model)
+          if use_human_trajectories:
+            experiment_interface.process_commands("model human")
           experiment_interface.process_commands("load %s %d" % (task_name_for_trajectory_loading, trial_index))
+          # Start a line in the results file for this trial.
+          if not started_output_line:
+            fout = open(output_filepath, 'a')
+            fout.write('\n%s,%s,%s,%2d' % (datetime.now().strftime("%Y-%m-%d %H-%M-%S"),
+                                           model if not use_human_trajectories else 'human',
+                                           task, trial_index))
+            fout.close()
+            started_output_line = True
         except AssertionError:
           experiment_interface = None
           reached_end_of_test_set = True
