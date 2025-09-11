@@ -1,2 +1,13 @@
 /.mypy_cache/
 __pycache__/
+
+# Data
+*.hdf5
+
+# Videos and pictures
+*.gif
+*.mp4
+*.avi
+*.mpg
+*.png
+*.jpg

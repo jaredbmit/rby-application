@@ -173,7 +173,7 @@ for task in sorted(os.listdir(data_root_dir)):
   if task == 'stirring':
     task_name_for_trajectory_loading = 'stir'
   # model_filenames = ['human']
-  model_filenames = sorted(os.listdir(task_dir)) + ['human']
+  model_filenames = ['human'] + sorted(os.listdir(task_dir))
   for model_filename in model_filenames:
     use_human_trajectories = model_filename == 'human'
     if not use_human_trajectories:

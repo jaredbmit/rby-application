@@ -60,6 +60,38 @@ class ExperimentInterface:
 
         # self._controller_type = "cartesian"
         self._controller_type = 'cartesian'
+      
+        # load lists of safe trials to use for each task and model
+        fin = open(os.path.join(self._data_folder, 'simulation_results.csv'))
+        simulation_results_lines = fin.readlines()
+        simulation_results_lines = simulation_results_lines[1:] # skip the header row
+        fin.close()
+        self._safe_trials = {}
+        for simulation_results_line in simulation_results_lines:
+            (_, model, task, trial_index, *results) = simulation_results_line.split(',')
+            results = [int(result.strip()) for result in results]
+            success = 1 in results
+            self._safe_trials.setdefault(task, {'model': [], 'trial_index': []})
+            if success:
+                self._safe_trials[task]['model'].append(model)
+                self._safe_trials[task]['trial_index'].append(int(trial_index))
+        # generate a (deterministically) randomized list of trials for each task
+        self._safe_trials_shuffled = {}
+        for task in list(self._safe_trials.keys()):
+            models = np.array(self._safe_trials[task]['model'])
+            trial_indexes = np.array(self._safe_trials[task]['trial_index'])
+            rng = np.random.default_rng(seed=42)
+            perm = rng.permutation(len(models))
+            models_shuffled = models[perm]
+            trial_indexes_shuffled = trial_indexes[perm]
+            self._safe_trials_shuffled[task] = {}
+            self._safe_trials_shuffled[task]['model'] = models_shuffled
+            self._safe_trials_shuffled[task]['trial_index'] = trial_indexes_shuffled
+            fout = open(os.path.join(self._data_folder, 'shuffling_key_%s.csv' % task), 'w')
+            fout.write('shuffled_index,model,trial_index\n')
+            for i in range(len(models_shuffled)):
+                fout.write('%d,%s,%d\n' % (i, models_shuffled[i], trial_indexes_shuffled[i]))
+            fout.close()
 
     def update_model_selection(self, model_name):
         trajectory_filename = model_name + "_inference.hdf5"
@@ -1113,6 +1145,8 @@ class ExperimentInterface:
             model model/human                        : Set the model to use (or human), or blank to list
             time # [t #]                             : Move to the pose at time percent # (0-100)
             run [r] (noprompt, nostartpose, faststartpose): Run the trajectory, with optional qualifiers
+            rand pour/scoop/stir #                   : Run the specified shuffled index of the given task
+            diff                                     : Print the gripper movement amount
             back [b]                                 : Move to a preset back position (if specified)
             offset right/left x/y/z # [o r/l x/y/z #]: Increase a gripper offset by the relative # cm
             offset [o]                               : Print the current gripper offsets
@@ -1242,7 +1276,7 @@ class ExperimentInterface:
                     print("Invalid model specified")
                     return
                 # Print the result.
-                self.process_commands("model")
+                self._command_queue = ['model'] + self._command_queue
         elif command_split[0] in ["load", "l"]:
             activity_type = command_split[1]
             try:
@@ -1250,13 +1284,13 @@ class ExperimentInterface:
             except:
                 print("Invalid trajectory index specified")
                 return
-            if activity_type in ["pour", "p"]:
+            if activity_type in ["pour", "p", 'pouring']:
                 self.load_pouring_trajectory(trajectory_index)
                 self._previous_load_trajectory_command = command
-            elif activity_type in ["scoop", "s"]:
+            elif activity_type in ["scoop", "s", 'scooping', 'scooping_powder']:
                 self.load_scooping_trajectory(trajectory_index)
                 self._previous_load_trajectory_command = command
-            elif activity_type in ["stir", "r"]:
+            elif activity_type in ["stir", "r", 'stirring']:
                 self.load_stirring_trajectory(trajectory_index)
                 self._previous_load_trajectory_command = command
             else:
@@ -1322,7 +1356,7 @@ class ExperimentInterface:
             print("Torso pose:")
             print(self._rainbow_interface.get_pose("base", "link_torso_5").tolist())
         elif command_split[0] in ["joints", "j"]:
-            print(self._rainbow_interface.get_position())
+            print(self._rainbow_interface.get_joint_positions())
         elif command_split[0] in ["demo"]:
             if command_split[1] == 'lemonade':
                 original_speed = self._speed_reduction_factor
@@ -1350,6 +1384,43 @@ class ExperimentInterface:
                   # Clean up
                   'speed %g' % original_speed,
                 ]
+        elif command_split[0] in ["rand", 'random']:
+            task_name = command_split[1]
+            if task_name in ['pour', 'pouring']:
+                task_name = 'pouring'
+            if task_name in ['scoop', 'scooping', 'scooping_powder']:
+                task_name = 'scooping_powder'
+            if task_name in ['stir', 'stirring']:
+                task_name = 'stirring'
+            rand_trial_index = int(command_split[2])
+            model = self._safe_trials_shuffled[task_name]['model'][rand_trial_index]
+            trial_index = self._safe_trials_shuffled[task_name]['trial_index'][rand_trial_index]
+            self._command_queue = [
+                'model %s' % model,
+                'load %s %d' % (task_name, trial_index),
+                'home',
+                'run',
+                ]
+        elif command_split[0] in ['diff']:
+            npy_print_format = {'float_kind': lambda x: "{:8.5f}".format(x)}
+            # Get the current positions.
+            left_starting_position_m = self._rainbow_interface.get_position_m('left')
+            right_starting_position_m = self._rainbow_interface.get_position_m('right')
+            print('Left  start [m]: %s' % np.array2string(left_starting_position_m, formatter=npy_print_format))
+            print('Right start [m]: %s' % np.array2string(right_starting_position_m, formatter=npy_print_format))
+            # Wait for the user to move the robot as desired.
+            input('Move the robot as desired, then press Enter')
+            # Get the ending position
+            left_ending_position_m = self._rainbow_interface.get_position_m('left')
+            right_ending_position_m = self._rainbow_interface.get_position_m('right')
+            print('Left  end [m]  : %s' % np.array2string(left_ending_position_m, formatter=npy_print_format))
+            print('Right end [m]  : %s' % np.array2string(right_ending_position_m, formatter=npy_print_format))
+            # Print the difference.
+            npy_print_format = {'float_kind': lambda x: "{:6.2f}".format(x)}
+            left_diff_cm = 100*(left_ending_position_m - left_starting_position_m)
+            right_diff_cm = 100*(right_ending_position_m - right_starting_position_m)
+            print('Left  diff [cm]: %0.2f | %s' % (np.linalg.norm(left_diff_cm), np.array2string(left_diff_cm, formatter=npy_print_format)))
+            print('Right diff [cm]: %0.2f | %s' % (np.linalg.norm(right_diff_cm), np.array2string(right_diff_cm, formatter=npy_print_format)))
         else:
             print("Unknown menu option")
             self._command_history = self._command_history[0:-1]

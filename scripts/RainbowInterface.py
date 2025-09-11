@@ -158,10 +158,34 @@ class RainbowInterface:
         pose = self.dynamics.compute_transformation(self.state, link_id_1, link_id_2)
         return pose
 
-    def get_position(self):
+    def get_joint_positions(self):
         position = self.robot.get_state().position
         return position
-
+    
+    def get_robot_state(self):
+        return self.robot.get_state()
+    
+    def get_position_m(self, left_right_base_torso, robot_state=None):
+        if robot_state is None:
+            robot_state = self.get_robot_state()
+        dynamics = self.robot.get_dynamics()
+        dynamics_state = dynamics.make_state(
+            self.links,
+            sdk.Model_A().robot_joint_names,
+        )
+        dynamics_state.set_q(robot_state.position)
+        dynamics.compute_forward_kinematics(dynamics_state)
+        link_id = {
+            'left': self.link_id_map["ee_left"],
+            'right': self.link_id_map["ee_right"],
+            'base': self.link_id_map["base"],
+            'torso': self.link_id_map["link_torso_5"],
+        }[left_right_base_torso.lower().strip()]
+        T = dynamics.compute_transformation(
+                        dynamics_state, self.link_id_map["base"], link_id)
+        position_xyz = T[0:3,3].reshape(1,3).squeeze() # take the translation component of the transformation (the last column)
+        return position_xyz
+        
     def move_to_home(self):
         if self._q_home_position is None:
             print("No home position available.")
