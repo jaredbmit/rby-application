@@ -67,9 +67,21 @@ class ExperimentInterface:
         # 'lstm', 'gru', 'lstm_stack', 'gru_stack'
         # 'transformer_attn', 'transformer_ff'
         # 'diff_transformer_attn', 'diff_transformer_ff'
+        self._shuffled_trial_count_per_model_target = 5
+        self._shuffled_trial_count_per_model = {}
         self._models_to_skip_for_rand_evals = None
         self._models_to_use_for_rand_evals = ['human', 'gru_stack', 'linoss_imex', 'transformer_attn']
-        
+        self._shuffled_trial_indexes_to_skip = [ # TODO this should be by task
+            31, # pouring
+            55, # pouring
+            39, # human scoop 11
+            14, # scooping
+            21, # scooping
+            35, # human stir 12
+            0, # stir
+            ]
+        self._shuffled_trial_indexes_already_done = [
+        ]
         # load lists of safe trials to use for each task and model
         shuffle_seed = 6
         fin = open(os.path.join(self._data_folder, 'simulation_animation_results.csv'))
@@ -122,10 +134,19 @@ class ExperimentInterface:
         if self._use_human_trajectories:
             print(' ** Using human trajectories')
         
-        # if trajectory_index in [6, 9]:
-        #     user_input = input('This trajectory was marked as UNSAFE in simulation. Do you want to continue? [y/N]: ')
-        #     if user_input.lower() != 'y':
-        #         return
+        is_safe = False
+        model_name = self._model_name if not self._use_human_trajectories else 'human'
+        for i in range(len(self._safe_trials['pouring']['model'])):
+            if self._safe_trials['pouring']['model'][i] == model_name and self._safe_trials['pouring']['trial_index'][i] == trajectory_index:
+                is_safe = True
+                break
+        if not is_safe:
+            user_input = input('This trajectory was NOT recommended after simulation/animation. Continue using it? [y/N]: ')
+            if user_input.lower() != 'y':
+                print('Aborting trajectory loading.')
+                return
+            else:
+                print('Continuing trajectory loading.')
 
         # Define the home positions.
         BEND_ANGLE = 10
@@ -266,7 +287,7 @@ class ExperimentInterface:
         pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.175])
         left_gripper_theta = np.pi / 6
         # NOTE: z points up, x points right, y points forward
-        left_gripper_offset = np.array([0, 0, -0.12])
+        left_gripper_offset = np.array([6.5, -11, -16], dtype=float)/100 # tuned using a human trajectory
 
         # Load the trajectory data.
         with h5py.File(self._pouring_trajectory_file, "r") as f:
@@ -416,10 +437,19 @@ class ExperimentInterface:
         if self._use_human_trajectories:
             print(' ** Using human trajectories')
         
-        # if trajectory_index not in [13]:
-        #     user_input = input('This trajectory is not one that was recommended after simulation. Do you want to continue? [y/N]: ')
-        #     if user_input.lower() != 'y':
-        #         return
+        is_safe = False
+        model_name = self._model_name if not self._use_human_trajectories else 'human'
+        for i in range(len(self._safe_trials['scooping_powder']['model'])):
+            if self._safe_trials['scooping_powder']['model'][i] == model_name and self._safe_trials['scooping_powder']['trial_index'][i] == trajectory_index:
+                is_safe = True
+                break
+        if not is_safe:
+            user_input = input('This trajectory was NOT recommended after simulation/animation. Continue using it? [y/N]: ')
+            if user_input.lower() != 'y':
+                print('Aborting trajectory loading.')
+                return
+            else:
+                print('Continuing trajectory loading.')
 
         # Define the home positions.
         BEND_ANGLE = 10
@@ -573,7 +603,7 @@ class ExperimentInterface:
         # NOTE: z points up, x points right, y points forward
         # NOTE: the z will be overriden by z_right_gripper below
         pos_right_hand_to_pitcher_p = np.array([-0.04, 0.05, -0.22]) # before 2025-08-27: [0.06, -0.01, -0.16]
-        z_right_gripper = 1.07 # before 2025-08-27: 1.09
+        z_right_gripper = 1.09 # before 2025-09-12: 1.07 # before 2025-08-27: 1.09
         rot_right_hand_to_pitcher = np.array(
             [
                 [0, 0, 1],
@@ -583,7 +613,7 @@ class ExperimentInterface:
         )
         rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
         pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
-        right_gripper_offset = np.array([-0.22, -0.2, -0.05])
+        right_gripper_offset = np.array([-26.5, -23, -5], dtype=float)/100 # before 2025-09-12:
 
         # Load the trajectory data.
         with h5py.File(self._scooping_trajectory_file, "r") as f:
@@ -723,10 +753,20 @@ class ExperimentInterface:
         if self._use_human_trajectories:
             print(' ** Using human trajectories')
         
-        # if trajectory_index not in [8]:
-        #     user_input = input('This trajectory is not one that was recommended after simulation. Do you want to continue? [y/N]: ')
-        #     if user_input.lower() != 'y':
-        #         return
+        is_safe = False
+        model_name = self._model_name if not self._use_human_trajectories else 'human'
+        for i in range(len(self._safe_trials['stirring']['model'])):
+            if self._safe_trials['stirring']['model'][i] == model_name and self._safe_trials['stirring']['trial_index'][i] == trajectory_index:
+                is_safe = True
+                break
+        if not is_safe:
+            user_input = input('This trajectory was NOT recommended after simulation/animation. Continue using it? [y/N]: ')
+            if user_input.lower() != 'y':
+                print('Aborting trajectory loading.')
+                return
+            else:
+                print('Continuing trajectory loading.')
+                
           
         # Define the home positions.
         BEND_ANGLE = 10
@@ -875,13 +915,13 @@ class ExperimentInterface:
         rot_left_hand_to_left_gripper = (
             rot_left_hand_to_spoon @ rot_spoon_to_left_gripper
         )
-        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.025])
-        left_gripper_offset = np.array([-0.25, -0.1, 0])
+        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 2.5], dtype=float)/100
+        left_gripper_offset = np.array([10, 0, 15], dtype=float)/100 # before 2025-09-12: [-25, -10, 0]/100
         # Right side
         # NOTE: z points up, x points right, y points forward
         # NOTE: the z will be overriden by z_right_gripper below
         pos_right_hand_to_pitcher_p = np.array([0.10, 0.013, -0.14]) # before 2025-08-27: [0.06, -0.01, -0.16]
-        z_right_gripper = 1.18 # before 2025-08-27: 1.09
+        z_right_gripper = 121/100 # before 2025-09-12: 1.18 # before 2025-08-27: 1.09
         rot_right_hand_to_pitcher = np.array(
             [
                 [0, 0, 1],
@@ -979,6 +1019,7 @@ class ExperimentInterface:
             + pos_left_hand_to_left_gripper_R
             + left_gripper_offset
         )
+        print('left_gripper_offset', left_gripper_offset)
 
         # Right gripper position trajectory
         pos_human_to_pitcher_R = (
@@ -1008,6 +1049,13 @@ class ExperimentInterface:
         T_left[:, :3, :3] = rot_robot_to_left_gripper
         T_left[:, :3, 3] = pos_robot_to_left_gripper_R
         T_left[:, 3, 3] = 1
+        
+        # T_left = np.repeat(
+        #     self._rainbow_interface.get_home_pose("left")[np.newaxis, ...],
+        #     repeats=n,
+        #     axis=0,
+        # )
+        T_left[:, :3, 3] = T_left[:, :3, 3] + np.array([5, 4, 0])/100
 
         # Torso static trajectory
         T_torso = np.repeat(
@@ -1021,9 +1069,9 @@ class ExperimentInterface:
         self._controller_type = 'cartesian'
         
         # Store the loaded trajectory.
-        self._T_left = T_left
-        self._T_right = T_right
-        self._T_torso = T_torso
+        self._T_left = T_left.copy()
+        self._T_right = T_right.copy()
+        self._T_torso = T_torso.copy()
 
     def move_to_trajectory_pose(self, time_ratio, duration_s=4):
         if (
@@ -1157,7 +1205,7 @@ class ExperimentInterface:
             home [h]                                 : Go to home position
             speed # [s #]                            : Set trajectory playback speed reduction factor
             load pour/scoop/stir # [l p/s/r #]       : Load trajectory index #
-            split train/val/test [l train/val/test]  : Set trajectory data split
+            split train/val/test                     : Set trajectory data split
             model model/human                        : Set the model to use (or human), or blank to list
             time # [t #]                             : Move to the pose at time percent # (0-100)
             run [r] (noprompt, nostartpose, faststartpose): Run the trajectory, with optional qualifiers
@@ -1252,7 +1300,7 @@ class ExperimentInterface:
                     return
                 # Print the result.
                 self.process_commands("speed")
-        elif command_split[0] in ["split", "l"]:
+        elif command_split[0] in ["split"]:
             if len(command_split) == 1:
                 print(f"Current data split: {self._split}")
             else:
@@ -1411,30 +1459,64 @@ class ExperimentInterface:
             rand_trial_index = command_split[2]
             if rand_trial_index == 'next':
                 rand_trial_index = self._prev_shuffle_index + 1
-                auto_advance_if_skipping_model = True
+                auto_advance_if_skipping_shuffled_trial = True
             else:
                 rand_trial_index = int(rand_trial_index)
-                auto_advance_if_skipping_model = False
+                auto_advance_if_skipping_shuffled_trial = False
             if rand_trial_index >= len(self._safe_trials_shuffled[task_name]['model']):
                 print('The %s task only has %d shuffled trials' % (task_name, len(self._safe_trials_shuffled[task_name]['model'])))
             else:
                 model = self._safe_trials_shuffled[task_name]['model'][rand_trial_index]
                 trial_index = self._safe_trials_shuffled[task_name]['trial_index'][rand_trial_index]
+                time_index = 50
+                if task_name == 'pouring':
+                    time_index = 50
+                elif task_name == 'scooping_powder':
+                    time_index = 62
+                elif task_name == 'stirring':
+                    time_index = 50
                 self._command_queue = [
                     'model %s' % model,
                     'load %s %d' % (task_name, trial_index),
-                    'home',
-                    'run',
+                    't %d' % time_index,
+                    'diff'
                     ]
                 print('rand_trial_index:', rand_trial_index)
                 self._prev_shuffle_index = rand_trial_index
+                # Skip it if it is not for the correct model.
+                skip_trial = False
                 if (self._models_to_use_for_rand_evals is not None and model not in self._models_to_use_for_rand_evals) or \
                     (self._models_to_skip_for_rand_evals is not None and model in self._models_to_skip_for_rand_evals):
-                    if auto_advance_if_skipping_model:
-                        self._command_queue = ['rand %s next' % task_name]
+                    if auto_advance_if_skipping_shuffled_trial:
+                        skip_trial = True
                     else:
                         print('**** NOTE: The model of this trial is not manually recommended for shuffle tests.')
                         time.sleep(3)
+                # Skip it if enough of this model has already been done.
+                if self._shuffled_trial_count_per_model_target is not None \
+                  and model in self._shuffled_trial_count_per_model \
+                  and self._shuffled_trial_count_per_model[model] >= self._shuffled_trial_count_per_model_target:
+                    if auto_advance_if_skipping_shuffled_trial:
+                        skip_trial = True
+                    else:
+                        print('**** NOTE: Have already done %d trials of this model.' % self._shuffled_trial_count_per_model[model])
+                        time.sleep(3)
+                # Skip it if it is marked as bad.
+                if rand_trial_index in self._shuffled_trial_indexes_to_skip:
+                    skip_trial = True
+                # Skip it if it is already done, but mark it as such.
+                if rand_trial_index in self._shuffled_trial_indexes_already_done:
+                    skip_trial = True
+                    self._shuffled_trial_count_per_model.setdefault(model, 0)
+                    self._shuffled_trial_count_per_model[model] += 1
+                # Skip the trial if desired.
+                if skip_trial:
+                    self._command_queue = ['rand %s next'%task_name]
+                else:
+                    self._shuffled_trial_count_per_model.setdefault(model, 0)
+                    self._shuffled_trial_count_per_model[model] += 1
+                    print('Will now be doing shuffled index %d' % rand_trial_index)
+                    input('Press Enter to continue ')
         elif command_split[0] in ['diff']:
             npy_print_format = {'float_kind': lambda x: "{:8.5f}".format(x)}
             # Get the current positions.
@@ -1478,10 +1560,11 @@ if __name__ == "__main__":
     # experiment_interface.process_commands("load pour 1")
     # experiment_interface.process_commands("load scoop 13")
     # experiment_interface.process_commands("load stir 8")
-    experiment_interface.process_commands("model human")
-    experiment_interface.process_commands("load pour 0")
-    experiment_interface.process_commands("h")
-    experiment_interface.process_commands("t 0")
+    experiment_interface._command_queue = [
+        "model human",
+        "load pour 1",
+        "speed 3",
+    ]
     print()
     while True:
         try:
