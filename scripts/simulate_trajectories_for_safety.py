@@ -36,7 +36,8 @@ output_filepath = 'simulation_results.csv'
 if not os.path.exists(output_filepath):
   # Create the file and write the headers.
   fout = open(output_filepath, 'a')
-  fout.write('simulation_start_time,model,task,trial_index,success 1,success 2,success 3')
+  fout.write('Simulation Start Time,Model,Task,Trial Index')
+  fout.write(',Simulation Test 1,Simulation Test 2,Simulation Test 3')
   fout.close()
 else:
   # Read existing contents.

@@ -61,16 +61,25 @@ class ExperimentInterface:
         # self._controller_type = "cartesian"
         self._controller_type = 'cartesian'
       
+        # Specify model types that should be skipped or included during random trials.
+        # 'human'
+        # 'linoss_im', 'linoss_imex', 's5', 'lru'
+        # 'lstm', 'gru', 'lstm_stack', 'gru_stack'
+        # 'transformer_attn', 'transformer_ff'
+        # 'diff_transformer_attn', 'diff_transformer_ff'
+        self._models_to_skip_for_rand_evals = None
+        self._models_to_use_for_rand_evals = ['human', 'gru_stack', 'linoss_imex', 'transformer_attn']
+        
         # load lists of safe trials to use for each task and model
-        fin = open(os.path.join(self._data_folder, 'simulation_results.csv'))
+        shuffle_seed = 6
+        fin = open(os.path.join(self._data_folder, 'simulation_animation_results.csv'))
         simulation_results_lines = fin.readlines()
         simulation_results_lines = simulation_results_lines[1:] # skip the header row
         fin.close()
         self._safe_trials = {}
         for simulation_results_line in simulation_results_lines:
-            (_, model, task, trial_index, *results) = simulation_results_line.split(',')
-            results = [int(result.strip()) for result in results]
-            success = 1 in results
+            (_, model, task, trial_index, sim_1, sim_2, sim_3, sim, manual, *notes) = simulation_results_line.split(',')
+            success = int(sim) == 1 and int(manual) == 1
             self._safe_trials.setdefault(task, {'model': [], 'trial_index': []})
             if success:
                 self._safe_trials[task]['model'].append(model)
@@ -80,18 +89,19 @@ class ExperimentInterface:
         for task in list(self._safe_trials.keys()):
             models = np.array(self._safe_trials[task]['model'])
             trial_indexes = np.array(self._safe_trials[task]['trial_index'])
-            rng = np.random.default_rng(seed=42)
+            rng = np.random.default_rng(seed=shuffle_seed)
             perm = rng.permutation(len(models))
             models_shuffled = models[perm]
             trial_indexes_shuffled = trial_indexes[perm]
             self._safe_trials_shuffled[task] = {}
             self._safe_trials_shuffled[task]['model'] = models_shuffled
             self._safe_trials_shuffled[task]['trial_index'] = trial_indexes_shuffled
-            fout = open(os.path.join(self._data_folder, 'shuffling_key_%s.csv' % task), 'w')
+            fout = open(os.path.join(self._data_folder, 'shuffling_key_%s_seed%d.csv' % (task, shuffle_seed)), 'w')
             fout.write('shuffled_index,model,trial_index\n')
             for i in range(len(models_shuffled)):
                 fout.write('%d,%s,%d\n' % (i, models_shuffled[i], trial_indexes_shuffled[i]))
             fout.close()
+        self._prev_shuffle_index = -1
 
     def update_model_selection(self, model_name):
         trajectory_filename = model_name + "_inference.hdf5"
@@ -262,13 +272,15 @@ class ExperimentInterface:
         with h5py.File(self._pouring_trajectory_file, "r") as f:
             # Traj videos: 0, 36, 42
             i = 0
+            found_trajectory = False
             for traj_key, trajectory in f.items():
                 if trajectory.attrs["split"] == self._split:
                     if i == trajectory_index:
+                        found_trajectory = True
                         break
                     else:
                         i = i + 1
-            if i < trajectory_index:
+            if not found_trajectory:
                 print(
                     f"Trajectory index {trajectory_index} of split {self._split} does not exist"
                 )
@@ -379,12 +391,12 @@ class ExperimentInterface:
             axis=0,
         )
 
-        ## TEMPORARY -- OVERRIDE TO KEEP LEFT HAND AT HOME POSITION RATHER THAN GLASS POSITION
-        T_left = np.repeat(
-            self._rainbow_interface.get_home_pose("left")[np.newaxis, ...],
-            repeats=n,
-            axis=0,
-        )
+        # ## TEMPORARY -- OVERRIDE TO KEEP LEFT HAND AT HOME POSITION RATHER THAN GLASS POSITION
+        # T_left = np.repeat(
+        #     self._rainbow_interface.get_home_pose("left")[np.newaxis, ...],
+        #     repeats=n,
+        #     axis=0,
+        # )
         
         # Specify the type of controller to use.
         self._controller_type = 'cartesian'
@@ -576,13 +588,15 @@ class ExperimentInterface:
         # Load the trajectory data.
         with h5py.File(self._scooping_trajectory_file, "r") as f:
             i = 0
+            found_trajectory = False
             for traj_key, trajectory in f.items():
                 if trajectory.attrs["split"] == self._split:
                     if i == trajectory_index:
+                        found_trajectory = True
                         break
                     else:
                         i = i + 1
-            if i < trajectory_index:
+            if not found_trajectory:
                 print(
                     f"Trajectory index {trajectory_index} of split {self._split} does not exist"
                 )
@@ -882,13 +896,15 @@ class ExperimentInterface:
         # Load the trajectory data.
         with h5py.File(self._stirring_trajectory_file, "r") as f:
             i = 0
+            found_trajectory = False
             for traj_key, trajectory in f.items():
                 if trajectory.attrs["split"] == self._split:
                     if i == trajectory_index:
+                        found_trajectory = True
                         break
                     else:
                         i = i + 1
-            if i < trajectory_index:
+            if not found_trajectory:
                 print(
                     f"Trajectory index {trajectory_index} of split {self._split} does not exist"
                 )
@@ -1392,15 +1408,33 @@ class ExperimentInterface:
                 task_name = 'scooping_powder'
             if task_name in ['stir', 'stirring']:
                 task_name = 'stirring'
-            rand_trial_index = int(command_split[2])
-            model = self._safe_trials_shuffled[task_name]['model'][rand_trial_index]
-            trial_index = self._safe_trials_shuffled[task_name]['trial_index'][rand_trial_index]
-            self._command_queue = [
-                'model %s' % model,
-                'load %s %d' % (task_name, trial_index),
-                'home',
-                'run',
-                ]
+            rand_trial_index = command_split[2]
+            if rand_trial_index == 'next':
+                rand_trial_index = self._prev_shuffle_index + 1
+                auto_advance_if_skipping_model = True
+            else:
+                rand_trial_index = int(rand_trial_index)
+                auto_advance_if_skipping_model = False
+            if rand_trial_index >= len(self._safe_trials_shuffled[task_name]['model']):
+                print('The %s task only has %d shuffled trials' % (task_name, len(self._safe_trials_shuffled[task_name]['model'])))
+            else:
+                model = self._safe_trials_shuffled[task_name]['model'][rand_trial_index]
+                trial_index = self._safe_trials_shuffled[task_name]['trial_index'][rand_trial_index]
+                self._command_queue = [
+                    'model %s' % model,
+                    'load %s %d' % (task_name, trial_index),
+                    'home',
+                    'run',
+                    ]
+                print('rand_trial_index:', rand_trial_index)
+                self._prev_shuffle_index = rand_trial_index
+                if (self._models_to_use_for_rand_evals is not None and model not in self._models_to_use_for_rand_evals) or \
+                    (self._models_to_skip_for_rand_evals is not None and model in self._models_to_skip_for_rand_evals):
+                    if auto_advance_if_skipping_model:
+                        self._command_queue = ['rand %s next' % task_name]
+                    else:
+                        print('**** NOTE: The model of this trial is not manually recommended for shuffle tests.')
+                        time.sleep(3)
         elif command_split[0] in ['diff']:
             npy_print_format = {'float_kind': lambda x: "{:8.5f}".format(x)}
             # Get the current positions.
@@ -1409,7 +1443,7 @@ class ExperimentInterface:
             print('Left  start [m]: %s' % np.array2string(left_starting_position_m, formatter=npy_print_format))
             print('Right start [m]: %s' % np.array2string(right_starting_position_m, formatter=npy_print_format))
             # Wait for the user to move the robot as desired.
-            input('Move the robot as desired, then press Enter')
+            input('Move the robot as desired, then press Enter ')
             # Get the ending position
             left_ending_position_m = self._rainbow_interface.get_position_m('left')
             right_ending_position_m = self._rainbow_interface.get_position_m('right')
@@ -1434,16 +1468,20 @@ class ExperimentInterface:
 if __name__ == "__main__":
     experiment_interface = ExperimentInterface(
         model_name="linoss_im",
-        simulation=True,
-        is_device_upc=False,
+        simulation=False,
+        is_device_upc=True,
         data_folder=None,#os.path.realpath('../data'),
     )
     experiment_interface.print_menu()
     previous_user_input = "m"
     print()
     # experiment_interface.process_commands("load pour 1")
-    experiment_interface.process_commands("load scoop 13")
+    # experiment_interface.process_commands("load scoop 13")
     # experiment_interface.process_commands("load stir 8")
+    experiment_interface.process_commands("model human")
+    experiment_interface.process_commands("load pour 0")
+    experiment_interface.process_commands("h")
+    experiment_interface.process_commands("t 0")
     print()
     while True:
         try:
