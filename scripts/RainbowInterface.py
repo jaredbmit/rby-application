@@ -78,11 +78,11 @@ class RainbowInterface:
 
         if not self.robot.connect():
             print("Error: Unable to establish connection to the robot.")
-            raise AssertionError("Error: Unable to establish connection to the robot.")
+            sys.exit(1)
 
         if not self.robot.is_connected():
             print("Robot is not connected.")
-            raise AssertionError("Robot is not connected.")
+            sys.exit(1)
 
         # Turn on the robot power
         if not self.robot.is_power_on(power_device):
@@ -489,9 +489,12 @@ class RainbowInterface:
         dt = DT
         time_in = speed_reduction_factor * t
         time_out = np.arange(0, np.max(time_in), dt)
-        T_right = interpolate_trajectory(time_in, time_out, T_right)
-        T_left = interpolate_trajectory(time_in, time_out, T_left)
-        T_torso = interpolate_trajectory(time_in, time_out, T_torso)
+        if T_right is not None:
+            T_right = interpolate_trajectory(time_in, time_out, T_right)
+        if T_left is not None:
+            T_left = interpolate_trajectory(time_in, time_out, T_left)
+        if T_torso is not None:
+            T_torso = interpolate_trajectory(time_in, time_out, T_torso)
         t = time_out
 
         duration = int(max(t))
@@ -499,7 +502,7 @@ class RainbowInterface:
         timestamps = []
 
         for i in range(len(t)):
-            if i % round(len(t) / 10) == 0:
+            if i % round(len(t) / 20) == 0:
                 print(
                     "Commanding timestep index %4d/%d (%5.1f%%)"
                     % (i, len(t) - 1, 100 * i / (len(t) - 1))

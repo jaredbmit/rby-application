@@ -38,12 +38,12 @@ class ExperimentInterface:
         # Initialize data locations
         self._data_folder = data_folder
         if self._data_folder is None:
-            self._data_folder = os.path.expanduser("~/drl/rby-application/data/")
+            self._data_folder = os.path.expanduser("~/drl/rby-application/data_2025-09_icra/")
         self._use_human_trajectories = use_human_trajectories
         self.update_model_selection(model_name)
 
         # Initialize state for the loaded trajectory.
-        self._t = np.linspace(0, 10, num=100)  # Always the same
+        self._t = None
         self._T_left = None
         self._T_right = None
         self._T_torso = None
@@ -84,35 +84,37 @@ class ExperimentInterface:
         ]
         # load lists of safe trials to use for each task and model
         shuffle_seed = 6
-        fin = open(os.path.join(self._data_folder, 'simulation_animation_results.csv'))
-        simulation_results_lines = fin.readlines()
-        simulation_results_lines = simulation_results_lines[1:] # skip the header row
-        fin.close()
         self._safe_trials = {}
-        for simulation_results_line in simulation_results_lines:
-            (_, model, task, trial_index, sim_1, sim_2, sim_3, sim, manual, *notes) = simulation_results_line.split(',')
-            success = int(sim) == 1 and int(manual) == 1
-            self._safe_trials.setdefault(task, {'model': [], 'trial_index': []})
-            if success:
-                self._safe_trials[task]['model'].append(model)
-                self._safe_trials[task]['trial_index'].append(int(trial_index))
-        # generate a (deterministically) randomized list of trials for each task
         self._safe_trials_shuffled = {}
-        for task in list(self._safe_trials.keys()):
-            models = np.array(self._safe_trials[task]['model'])
-            trial_indexes = np.array(self._safe_trials[task]['trial_index'])
-            rng = np.random.default_rng(seed=shuffle_seed)
-            perm = rng.permutation(len(models))
-            models_shuffled = models[perm]
-            trial_indexes_shuffled = trial_indexes[perm]
-            self._safe_trials_shuffled[task] = {}
-            self._safe_trials_shuffled[task]['model'] = models_shuffled
-            self._safe_trials_shuffled[task]['trial_index'] = trial_indexes_shuffled
-            fout = open(os.path.join(self._data_folder, 'shuffling_key_%s_seed%d.csv' % (task, shuffle_seed)), 'w')
-            fout.write('shuffled_index,model,trial_index\n')
-            for i in range(len(models_shuffled)):
-                fout.write('%d,%s,%d\n' % (i, models_shuffled[i], trial_indexes_shuffled[i]))
-            fout.close()
+        simulation_results_filepath = os.path.join(self._data_folder, 'simulation_animation_results.csv')
+        if os.path.exists(simulation_results_filepath):
+            fin = open(simulation_results_filepath, 'r')
+            simulation_results_lines = fin.readlines()
+            simulation_results_lines = simulation_results_lines[1:] # skip the header row
+            fin.close()
+            for simulation_results_line in simulation_results_lines:
+                (_, model, task, trial_index, sim_1, sim_2, sim_3, sim, manual, *notes) = simulation_results_line.split(',')
+                success = int(sim) == 1 and int(manual) == 1
+                self._safe_trials.setdefault(task, {'model': [], 'trial_index': []})
+                if success:
+                    self._safe_trials[task]['model'].append(model)
+                    self._safe_trials[task]['trial_index'].append(int(trial_index))
+            # generate a (deterministically) randomized list of trials for each task
+            for task in list(self._safe_trials.keys()):
+                models = np.array(self._safe_trials[task]['model'])
+                trial_indexes = np.array(self._safe_trials[task]['trial_index'])
+                rng = np.random.default_rng(seed=shuffle_seed)
+                perm = rng.permutation(len(models))
+                models_shuffled = models[perm]
+                trial_indexes_shuffled = trial_indexes[perm]
+                self._safe_trials_shuffled[task] = {}
+                self._safe_trials_shuffled[task]['model'] = models_shuffled
+                self._safe_trials_shuffled[task]['trial_index'] = trial_indexes_shuffled
+                fout = open(os.path.join(self._data_folder, 'shuffling_key_%s_seed%d.csv' % (task, shuffle_seed)), 'w')
+                fout.write('shuffled_index,model,trial_index\n')
+                for i in range(len(models_shuffled)):
+                    fout.write('%d,%s,%d\n' % (i, models_shuffled[i], trial_indexes_shuffled[i]))
+                fout.close()
         self._prev_shuffle_index = -1
 
     def update_model_selection(self, model_name):
@@ -129,24 +131,35 @@ class ExperimentInterface:
         print('*** Remember to now load a trajectory ***')
       
     def load_pouring_trajectory(self, trajectory_index):
-
+        
         print(f"Loading pouring trajectory {trajectory_index} of split {self._split}")
         if self._use_human_trajectories:
             print(' ** Using human trajectories')
         
-        is_safe = False
+        # Secret sign to use a truncated version of the trajectory.
+        start_percent = 0
+        end_percent = 100
+        insert_start_pose_at_end_time = False
+        if trajectory_index == -10:
+            start_percent = 5
+            end_percent = 78
+            insert_start_pose_at_end_time = True
+            trajectory_index = 10
+        
         model_name = self._model_name if not self._use_human_trajectories else 'human'
-        for i in range(len(self._safe_trials['pouring']['model'])):
-            if self._safe_trials['pouring']['model'][i] == model_name and self._safe_trials['pouring']['trial_index'][i] == trajectory_index:
-                is_safe = True
-                break
-        if not is_safe:
-            user_input = input('This trajectory was NOT recommended after simulation/animation. Continue using it? [y/N]: ')
-            if user_input.lower() != 'y':
-                print('Aborting trajectory loading.')
-                return
-            else:
-                print('Continuing trajectory loading.')
+        if 'pouring' in self._safe_trials:
+            is_safe = False
+            for i in range(len(self._safe_trials['pouring']['model'])):
+                if self._safe_trials['pouring']['model'][i] == model_name and self._safe_trials['pouring']['trial_index'][i] == trajectory_index:
+                    is_safe = True
+                    break
+            if not is_safe:
+                user_input = input('This trajectory was NOT recommended after simulation/animation. Continue using it? [y/N]: ')
+                if user_input.lower() != 'y':
+                    print('Aborting trajectory loading.')
+                    return
+                else:
+                    print('Continuing trajectory loading.')
 
         # Define the home positions.
         BEND_ANGLE = 10
@@ -274,21 +287,37 @@ class ExperimentInterface:
         else:
             self._rainbow_interface.set_back_position(None)
 
-        # Define the human to robot transformations.
-        rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
-        rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
-        # pos_right_hand_to_right_gripper_RG = np.array([-0.065, -0.075, 0.08])
-        pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
-        # NOTE: z points up, x points right, y points forward
-        right_gripper_offset = np.array([0, 0, 0]) # before 2025-08-29: [0, 0, 0]
+        if '2025-09_icra' in self._data_folder:
+            # Define the human to robot transformations.
+            rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+            rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
+            # pos_right_hand_to_right_gripper_RG = np.array([-0.065, -0.075, 0.08])
+            pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
+            # NOTE: z points up, x points right, y points forward
+            right_gripper_offset = np.array([0, 0, 0], dtype=float)/100 # before 2025-08-29: [0, 0, 0]
+    
+            rot_left_hand_to_left_gripper = np.eye(3)  # TODO
+            # pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
+            pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.175])
+            left_gripper_theta = np.pi / 6
+            # NOTE: z points up, x points right, y points forward
+            left_gripper_offset = np.array([6.5, -11, -16], dtype=float)/100 # tuned using a human trajectory
 
-        rot_left_hand_to_left_gripper = np.eye(3)  # TODO
-        # pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
-        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.175])
-        left_gripper_theta = np.pi / 6
-        # NOTE: z points up, x points right, y points forward
-        left_gripper_offset = np.array([6.5, -11, -16], dtype=float)/100 # tuned using a human trajectory
-
+        elif '2025-07_corl' in self._data_folder:
+            # Define the human to robot transformations.
+            rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+            rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
+            # pos_right_hand_to_right_gripper_RG = np.array([-0.065, -0.075, 0.08])
+            pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
+            # NOTE: z points up, x points right, y points forward
+            right_gripper_offset = np.array([0, 0, 0]) # before 2025-08-29: [0, 0, 0]
+            
+            rot_left_hand_to_left_gripper = np.eye(3)  # TODO
+            # pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.15])
+            pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.175])
+            left_gripper_theta = np.pi/6
+            left_gripper_offset = np.array([0, 0, -0.12])
+        
         # Load the trajectory data.
         with h5py.File(self._pouring_trajectory_file, "r") as f:
             # Traj videos: 0, 36, 42
@@ -321,7 +350,18 @@ class ExperimentInterface:
                 rot_human_to_right_hand = np.array(
                     truth["rot_human_to_right_hand"]
                 ).reshape((-1, 3, 3))
-            n = len(pos_human_to_right_hand_H)
+            if start_percent != 0 or end_percent != 100:
+                start_index = round(pos_human_to_right_hand_H.shape[0]*start_percent/100)
+                end_index = round(pos_human_to_right_hand_H.shape[0]*end_percent/100)
+                print('Truncating trajectory to index bounds', start_index, end_index)
+                if insert_start_pose_at_end_time:
+                    end_index = min(pos_human_to_right_hand_H.shape[0]-1, end_index+1)
+                    pos_human_to_right_hand_H[end_index] = pos_human_to_right_hand_H[start_index]
+                    rot_human_to_right_hand[end_index] = rot_human_to_right_hand[start_index]
+                pos_human_to_right_hand_H = pos_human_to_right_hand_H[start_index:end_index+1,:]
+                rot_human_to_right_hand = rot_human_to_right_hand[start_index:end_index+1,:,:]
+            n = pos_human_to_right_hand_H.shape[0]
+            print('Trajectory has length', n)
 
         # Right gripper rotation trajectory
         rot_robot_to_right_gripper = (
@@ -423,6 +463,9 @@ class ExperimentInterface:
         self._controller_type = 'cartesian'
         
         # Store the loaded trajectory.
+        self._t = np.linspace(0, 10, num=T_right.shape[0])
+        if insert_start_pose_at_end_time:
+            self._t[-1] = self._t[-1]+1
         self._T_left = T_left
         self._T_right = T_right
         self._T_torso = T_torso
@@ -437,19 +480,20 @@ class ExperimentInterface:
         if self._use_human_trajectories:
             print(' ** Using human trajectories')
         
-        is_safe = False
         model_name = self._model_name if not self._use_human_trajectories else 'human'
-        for i in range(len(self._safe_trials['scooping_powder']['model'])):
-            if self._safe_trials['scooping_powder']['model'][i] == model_name and self._safe_trials['scooping_powder']['trial_index'][i] == trajectory_index:
-                is_safe = True
-                break
-        if not is_safe:
-            user_input = input('This trajectory was NOT recommended after simulation/animation. Continue using it? [y/N]: ')
-            if user_input.lower() != 'y':
-                print('Aborting trajectory loading.')
-                return
-            else:
-                print('Continuing trajectory loading.')
+        if 'scooping_powder' in self._safe_trials:
+            is_safe = False
+            for i in range(len(self._safe_trials['scooping_powder']['model'])):
+                if self._safe_trials['scooping_powder']['model'][i] == model_name and self._safe_trials['scooping_powder']['trial_index'][i] == trajectory_index:
+                    is_safe = True
+                    break
+            if not is_safe:
+                user_input = input('This trajectory was NOT recommended after simulation/animation. Continue using it? [y/N]: ')
+                if user_input.lower() != 'y':
+                    print('Aborting trajectory loading.')
+                    return
+                else:
+                    print('Continuing trajectory loading.')
 
         # Define the home positions.
         BEND_ANGLE = 10
@@ -585,36 +629,67 @@ class ExperimentInterface:
             )
         else:
             self._rainbow_interface.set_back_position(None)
-
-        # Define the human to robot transformations.
-        rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
-        # Left side
-        _spoon_tilt_angles = np.array([np.pi / 2, 0, np.pi / 5])
-        rot_left_hand_to_spoon = tf.Rotation.from_euler(
-            "xyz", _spoon_tilt_angles
-        ).as_matrix()
-        rot_spoon_to_left_gripper = np.array([[0, 0, -1], [-1, 0, 0], [0, 1, 0]])
-        rot_left_hand_to_left_gripper = (
-            rot_left_hand_to_spoon @ rot_spoon_to_left_gripper
-        )
-        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.024])
-        left_gripper_offset = np.array([-0.2, -0.1, -0.02])
-        # Right side
-        # NOTE: z points up, x points right, y points forward
-        # NOTE: the z will be overriden by z_right_gripper below
-        pos_right_hand_to_pitcher_p = np.array([-0.04, 0.05, -0.22]) # before 2025-08-27: [0.06, -0.01, -0.16]
-        z_right_gripper = 1.09 # before 2025-09-12: 1.07 # before 2025-08-27: 1.09
-        rot_right_hand_to_pitcher = np.array(
-            [
-                [0, 0, 1],
-                [0, 1, 0],
-                [-1, 0, 0],
-            ]
-        )
-        rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
-        pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
-        right_gripper_offset = np.array([-26.5, -23, -5], dtype=float)/100 # before 2025-09-12:
-
+        
+        if '2025-09_icra' in self._data_folder:
+            # Define the human to robot transformations.
+            rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+            # Left side
+            _spoon_tilt_angles = np.array([np.pi / 2, 0, np.pi / 5])
+            rot_left_hand_to_spoon = tf.Rotation.from_euler(
+                "xyz", _spoon_tilt_angles
+            ).as_matrix()
+            rot_spoon_to_left_gripper = np.array([[0, 0, -1], [-1, 0, 0], [0, 1, 0]])
+            rot_left_hand_to_left_gripper = (
+                rot_left_hand_to_spoon @ rot_spoon_to_left_gripper
+            )
+            pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.024])
+            left_gripper_offset = np.array([-0.2, -0.1, -0.02])
+            # Right side
+            # NOTE: z points up, x points right, y points forward
+            # NOTE: the z will be overriden by z_right_gripper below
+            pos_right_hand_to_pitcher_p = np.array([-0.04, 0.05, -0.22]) # before 2025-08-27: [0.06, -0.01, -0.16]
+            z_right_gripper = 1.09 # before 2025-09-12: 1.07 # before 2025-08-27: 1.09
+            rot_right_hand_to_pitcher = np.array(
+                [
+                    [0, 0, 1],
+                    [0, 1, 0],
+                    [-1, 0, 0],
+                ]
+            )
+            rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
+            pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
+            right_gripper_offset = np.array([-26.5, -23, -5], dtype=float)/100 # before 2025-09-12:
+        
+        elif '2025-07_corl' in self._data_folder:
+            # Define the human to robot transformations.
+            rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+            # Left side
+            _spoon_tilt_angles = np.array([np.pi/2, 0, np.pi/5])
+            rot_left_hand_to_spoon = tf.Rotation.from_euler(
+                "xyz", _spoon_tilt_angles
+            ).as_matrix()
+            rot_spoon_to_left_gripper = np.array([[0, 0, -1], [-1, 0, 0], [0, 1, 0]])
+            rot_left_hand_to_left_gripper = (
+                rot_left_hand_to_spoon@rot_spoon_to_left_gripper
+            )
+            pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.024])
+            left_gripper_offset = np.array([-0.2, -0.1, -0.02])
+            # Right side
+            # NOTE: z points up, x points right, y points forward
+            # NOTE: the z will be overriden by z_right_gripper below
+            pos_right_hand_to_pitcher_p = np.array([-0.04, 0.05, -0.22])  # before 2025-08-27: [0.06, -0.01, -0.16]
+            z_right_gripper = 1.07  # before 2025-08-27: 1.09
+            rot_right_hand_to_pitcher = np.array(
+                [
+                    [0, 0, 1],
+                    [0, 1, 0],
+                    [-1, 0, 0],
+                ]
+            )
+            rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
+            pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
+            right_gripper_offset = np.array([-0.22, -0.2, -0.05])
+        
         # Load the trajectory data.
         with h5py.File(self._scooping_trajectory_file, "r") as f:
             i = 0
@@ -743,6 +818,7 @@ class ExperimentInterface:
         self._controller_type = 'cartesian'
         
         # Store the loaded trajectory.
+        self._t = np.linspace(0, 10, num=T_left.shape[0])
         self._T_left = T_left
         self._T_right = T_right
         self._T_torso = T_torso
@@ -753,19 +829,20 @@ class ExperimentInterface:
         if self._use_human_trajectories:
             print(' ** Using human trajectories')
         
-        is_safe = False
-        model_name = self._model_name if not self._use_human_trajectories else 'human'
-        for i in range(len(self._safe_trials['stirring']['model'])):
-            if self._safe_trials['stirring']['model'][i] == model_name and self._safe_trials['stirring']['trial_index'][i] == trajectory_index:
-                is_safe = True
-                break
-        if not is_safe:
-            user_input = input('This trajectory was NOT recommended after simulation/animation. Continue using it? [y/N]: ')
-            if user_input.lower() != 'y':
-                print('Aborting trajectory loading.')
-                return
-            else:
-                print('Continuing trajectory loading.')
+        if 'stirring' in self._safe_trials:
+            is_safe = False
+            model_name = self._model_name if not self._use_human_trajectories else 'human'
+            for i in range(len(self._safe_trials['stirring']['model'])):
+                if self._safe_trials['stirring']['model'][i] == model_name and self._safe_trials['stirring']['trial_index'][i] == trajectory_index:
+                    is_safe = True
+                    break
+            if not is_safe:
+                user_input = input('This trajectory was NOT recommended after simulation/animation. Continue using it? [y/N]: ')
+                if user_input.lower() != 'y':
+                    print('Aborting trajectory loading.')
+                    return
+                else:
+                    print('Continuing trajectory loading.')
                 
           
         # Define the home positions.
@@ -903,35 +980,66 @@ class ExperimentInterface:
           )
         else:
           self._rainbow_interface.set_back_position(None)
-
-        # Define the human to robot transformations.
-        rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
-        # Left side
-        _spoon_tilt_angles = np.array([np.pi / 2, 0, np.pi / 5])
-        rot_left_hand_to_spoon = tf.Rotation.from_euler(
-            "xyz", _spoon_tilt_angles
-        ).as_matrix()
-        rot_spoon_to_left_gripper = np.array([[0, 0, -1], [-1, 0, 0], [0, 1, 0]])
-        rot_left_hand_to_left_gripper = (
-            rot_left_hand_to_spoon @ rot_spoon_to_left_gripper
-        )
-        pos_left_hand_to_left_gripper_LG = np.array([0, 0, 2.5], dtype=float)/100
-        left_gripper_offset = np.array([10, 0, 15], dtype=float)/100 # before 2025-09-12: [-25, -10, 0]/100
-        # Right side
-        # NOTE: z points up, x points right, y points forward
-        # NOTE: the z will be overriden by z_right_gripper below
-        pos_right_hand_to_pitcher_p = np.array([0.10, 0.013, -0.14]) # before 2025-08-27: [0.06, -0.01, -0.16]
-        z_right_gripper = 121/100 # before 2025-09-12: 1.18 # before 2025-08-27: 1.09
-        rot_right_hand_to_pitcher = np.array(
-            [
-                [0, 0, 1],
-                [0, 1, 0],
-                [-1, 0, 0],
-            ]
-        )
-        rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
-        pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
-        right_gripper_offset = np.array([-0.1, -0.2, -0.025])
+        
+        if '2025-09_icra' in self._data_folder:
+            # Define the human to robot transformations.
+            rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+            # Left side
+            _spoon_tilt_angles = np.array([np.pi / 2, 0, np.pi / 5])
+            rot_left_hand_to_spoon = tf.Rotation.from_euler(
+                "xyz", _spoon_tilt_angles
+            ).as_matrix()
+            rot_spoon_to_left_gripper = np.array([[0, 0, -1], [-1, 0, 0], [0, 1, 0]])
+            rot_left_hand_to_left_gripper = (
+                rot_left_hand_to_spoon @ rot_spoon_to_left_gripper
+            )
+            pos_left_hand_to_left_gripper_LG = np.array([0, 0, 2.5], dtype=float)/100
+            left_gripper_offset = np.array([10, 0, 15], dtype=float)/100 # before 2025-09-12: [-25, -10, 0]/100
+            # Right side
+            # NOTE: z points up, x points right, y points forward
+            # NOTE: the z will be overriden by z_right_gripper below
+            pos_right_hand_to_pitcher_p = np.array([0.10, 0.013, -0.14]) # before 2025-08-27: [0.06, -0.01, -0.16]
+            z_right_gripper = 121/100 # before 2025-09-12: 1.18 # before 2025-08-27: 1.09
+            rot_right_hand_to_pitcher = np.array(
+                [
+                    [0, 0, 1],
+                    [0, 1, 0],
+                    [-1, 0, 0],
+                ]
+            )
+            rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
+            pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
+            right_gripper_offset = np.array([-0.1, -0.2, -0.025])
+        
+        elif '2025-07_corl' in self._data_folder:
+            # Define the human to robot transformations.
+            rot_robot_to_human = np.array([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+            # Left side
+            _spoon_tilt_angles = np.array([np.pi/2, 0, np.pi/5])
+            rot_left_hand_to_spoon = tf.Rotation.from_euler(
+                "xyz", _spoon_tilt_angles
+            ).as_matrix()
+            rot_spoon_to_left_gripper = np.array([[0, 0, -1], [-1, 0, 0], [0, 1, 0]])
+            rot_left_hand_to_left_gripper = (
+                rot_left_hand_to_spoon@rot_spoon_to_left_gripper
+            )
+            pos_left_hand_to_left_gripper_LG = np.array([0, 0, 0.025])
+            left_gripper_offset = np.array([-0.25, -0.1, 0])
+            # Right side
+            # NOTE: z points up, x points right, y points forward
+            # NOTE: the z will be overriden by z_right_gripper below
+            pos_right_hand_to_pitcher_p = np.array([0.10, 0.013, -0.14])  # before 2025-08-27: [0.06, -0.01, -0.16]
+            z_right_gripper = 1.18  # before 2025-08-27: 1.09
+            rot_right_hand_to_pitcher = np.array(
+                [
+                    [0, 0, 1],
+                    [0, 1, 0],
+                    [-1, 0, 0],
+                ]
+            )
+            rot_right_hand_to_right_gripper = np.array([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
+            pos_right_hand_to_right_gripper_RG = np.array([0, 0, 0.125])
+            right_gripper_offset = np.array([-0.1, -0.2, -0.025])
 
         # Load the trajectory data.
         with h5py.File(self._stirring_trajectory_file, "r") as f:
@@ -1069,6 +1177,7 @@ class ExperimentInterface:
         self._controller_type = 'cartesian'
         
         # Store the loaded trajectory.
+        self._t = np.linspace(0, 10, num=T_left.shape[0])
         self._T_left = T_left.copy()
         self._T_right = T_right.copy()
         self._T_torso = T_torso.copy()
@@ -1425,23 +1534,23 @@ class ExperimentInterface:
             if command_split[1] == 'lemonade':
                 original_speed = self._speed_reduction_factor
                 self._command_queue = [
-                  # Scoop
-                  'speed 1.5',
-                  'load scoop 13',
-                  'back',
-                  'run noprompt faststartpose',
+                  # # Scoop
+                  # 'speed 1.5',
+                  # 'load scoop 13',
                   # 'back',
                   # 'run noprompt faststartpose',
+                  # # 'back',
+                  # # 'run noprompt faststartpose',
+                  # # 'back',
+                  # # 'run noprompt faststartpose',
+                  # # Stir
+                  # 'speed 1.5',
+                  # 'load stir 8',
                   # 'back',
-                  # 'run noprompt faststartpose',
-                  # Stir
-                  'speed 1.5',
-                  'load stir 8',
-                  'back',
-                  'run noprompt',
+                  # 'run noprompt',
                   # Pour
-                  'speed 7',
-                  'load pour 5',
+                  'load pour -10',
+                  'speed 2',
                   'home',
                   'eval input(">> Press Enter to pour ")',
                   'run noprompt',
@@ -1552,23 +1661,23 @@ if __name__ == "__main__":
         model_name="linoss_im",
         simulation=False,
         is_device_upc=True,
-        data_folder=None,#os.path.realpath('../data'),
+        data_folder=None,
     )
     experiment_interface.print_menu()
-    previous_user_input = "m"
     print()
     # experiment_interface.process_commands("load pour 1")
     # experiment_interface.process_commands("load scoop 13")
     # experiment_interface.process_commands("load stir 8")
     experiment_interface._command_queue = [
-        "model human",
-        "load pour 1",
-        "speed 3",
+        'm',
+        'model linoss_im',
+        'load pour -10',
+        'speed 2',
     ]
     print()
     while True:
         try:
-            if experiment_interface.process_commands() == "quit":
+            if experiment_interface.process_commands() == 'quit':
                 break
         except:
             traceback.print_exc()
