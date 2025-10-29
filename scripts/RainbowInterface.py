@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import sys
 import time
 import queue
@@ -598,3 +599,4 @@ class RainbowInterface:
             return timestamps
 
         return (timestamps, T_left, T_right, T_torso)
+

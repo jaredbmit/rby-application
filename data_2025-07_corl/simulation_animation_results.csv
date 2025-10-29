@@ -1,0 +1,612 @@
+Simulation start time,Model,Task,Trial,Simulation test 1,Simulation test 2,Simulation test 3,Simulation finished (within 3 attempts),Animation looks safe,Animation Notes
+2025-09-10 17-49-58,human,pouring,0,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-50-26,human,pouring,1,0,1,,1,1,"Good tilt, smooth"
+2025-09-10 17-51-32,human,pouring,2,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-52-00,human,pouring,3,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-52-29,human,pouring,4,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-52-56,human,pouring,5,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-53-24,human,pouring,6,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-53-52,human,pouring,7,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-54-20,human,pouring,8,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-54-48,human,pouring,9,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-55-16,human,pouring,10,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-55-45,human,pouring,11,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-56-15,human,pouring,12,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-56-43,human,pouring,13,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-57-12,human,pouring,14,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-57-40,human,pouring,15,1,,,1,1,"Good tilt, smooth"
+2025-09-10 17-58-36,human,scooping_powder,0,0,0,0,0,1,
+2025-09-10 18-00-53,human,scooping_powder,1,0,0,1,1,1,
+2025-09-10 18-02-57,human,scooping_powder,2,0,0,0,0,1,
+2025-09-10 18-05-13,human,scooping_powder,3,0,0,0,0,1,
+2025-09-10 18-07-19,human,scooping_powder,4,0,0,0,0,1,
+2025-09-10 18-09-20,human,scooping_powder,5,0,0,0,0,1,
+2025-09-10 18-11-24,human,scooping_powder,6,0,0,0,0,1,
+2025-09-10 18-13-45,human,scooping_powder,7,0,0,0,0,1,
+2025-09-10 18-15-56,human,scooping_powder,8,0,0,0,0,1,
+2025-09-10 18-18-14,human,scooping_powder,9,0,0,0,0,1,
+2025-09-10 18-20-19,human,scooping_powder,10,1,,,1,1,
+2025-09-10 18-20-48,human,scooping_powder,11,1,,,1,1,
+2025-09-10 18-21-16,human,scooping_powder,12,1,,,1,1,
+2025-09-10 18-21-44,human,scooping_powder,13,1,,,1,1,
+2025-09-10 18-22-12,human,scooping_powder,14,1,,,1,1,
+2025-09-10 18-25-03,human,stirring,0,1,,,1,1,
+2025-09-10 18-25-32,human,stirring,1,1,,,1,1,
+2025-09-10 18-26-00,human,stirring,2,0,0,0,0,1,
+2025-09-10 18-28-04,human,stirring,3,0,0,0,0,1,
+2025-09-10 18-39-38,diff_transformer_attn,pouring,0,0,0,0,0,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-41-56,diff_transformer_attn,pouring,1,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-42-19,diff_transformer_attn,pouring,2,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-42-42,diff_transformer_attn,pouring,3,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-43-05,diff_transformer_attn,pouring,4,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-43-28,diff_transformer_attn,pouring,5,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-43-51,diff_transformer_attn,pouring,6,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-44-14,diff_transformer_attn,pouring,7,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-44-37,diff_transformer_attn,pouring,8,0,1,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-45-50,diff_transformer_attn,pouring,9,0,1,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-47-43,diff_transformer_attn,pouring,10,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-48-05,diff_transformer_attn,pouring,11,0,1,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-49-17,diff_transformer_attn,pouring,12,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-49-40,diff_transformer_attn,pouring,13,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-50-03,diff_transformer_attn,pouring,14,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-50-26,diff_transformer_attn,pouring,15,0,0,1,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-52-43,diff_transformer_ff,pouring,0,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-53-06,diff_transformer_ff,pouring,1,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-53-29,diff_transformer_ff,pouring,2,0,1,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-54-36,diff_transformer_ff,pouring,3,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-54-59,diff_transformer_ff,pouring,4,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-55-22,diff_transformer_ff,pouring,5,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-55-45,diff_transformer_ff,pouring,6,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-56-08,diff_transformer_ff,pouring,7,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-56-31,diff_transformer_ff,pouring,8,0,0,0,0,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-58-45,diff_transformer_ff,pouring,9,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-59-08,diff_transformer_ff,pouring,10,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-59-31,diff_transformer_ff,pouring,11,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 18-59-54,diff_transformer_ff,pouring,12,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 19-00-17,diff_transformer_ff,pouring,13,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 19-00-40,diff_transformer_ff,pouring,14,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 19-01-03,diff_transformer_ff,pouring,15,1,,,1,0,"Very shaky, but on average seem to follow reasonable path"
+2025-09-10 19-01-49,gru,pouring,0,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-02-12,gru,pouring,1,0,1,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-03-16,gru,pouring,2,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-03-39,gru,pouring,3,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-04-02,gru,pouring,4,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-04-25,gru,pouring,5,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-04-48,gru,pouring,6,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-05-11,gru,pouring,7,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-05-34,gru,pouring,8,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-05-57,gru,pouring,9,0,1,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-07-09,gru,pouring,10,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-07-32,gru,pouring,11,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-07-55,gru,pouring,12,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-08-18,gru,pouring,13,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-08-41,gru,pouring,14,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-09-04,gru,pouring,15,1,,,1,1,"Smooth, seem to move to good locations and follow natural paths"
+2025-09-10 19-09-50,gru_stack,pouring,0,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-10-13,gru_stack,pouring,1,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-10-36,gru_stack,pouring,2,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-10-59,gru_stack,pouring,3,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-11-22,gru_stack,pouring,4,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-11-45,gru_stack,pouring,5,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-12-08,gru_stack,pouring,6,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-12-31,gru_stack,pouring,7,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-12-54,gru_stack,pouring,8,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-13-17,gru_stack,pouring,9,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-13-40,gru_stack,pouring,10,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-14-03,gru_stack,pouring,11,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-14-26,gru_stack,pouring,12,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-14-49,gru_stack,pouring,13,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-15-12,gru_stack,pouring,14,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-15-35,gru_stack,pouring,15,1,,,1,1,"Smooth and reasonable, but often seem a bit short of the glass"
+2025-09-10 19-16-21,linoss_im,pouring,0,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-16-43,linoss_im,pouring,1,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-17-06,linoss_im,pouring,2,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-17-29,linoss_im,pouring,3,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-17-52,linoss_im,pouring,4,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-18-15,linoss_im,pouring,5,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-18-38,linoss_im,pouring,6,1,,,1,1,Pretty good but motionat beginning
+2025-09-10 19-19-01,linoss_im,pouring,7,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-19-24,linoss_im,pouring,8,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-19-47,linoss_im,pouring,9,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-20-10,linoss_im,pouring,10,1,,,1,1,Pretty good
+2025-09-10 19-20-33,linoss_im,pouring,11,1,,,1,1,Pretty good but small shake at beginning
+2025-09-10 19-20-56,linoss_im,pouring,12,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-21-19,linoss_im,pouring,13,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-21-42,linoss_im,pouring,14,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-22-05,linoss_im,pouring,15,1,,,1,1,Pretty good but shaking at beginning
+2025-09-10 19-22-51,linoss_imex,pouring,0,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-23-14,linoss_imex,pouring,1,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-23-37,linoss_imex,pouring,2,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-24-00,linoss_imex,pouring,3,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-24-23,linoss_imex,pouring,4,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-24-46,linoss_imex,pouring,5,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-25-09,linoss_imex,pouring,6,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-25-32,linoss_imex,pouring,7,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-25-55,linoss_imex,pouring,8,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-26-18,linoss_imex,pouring,9,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-26-41,linoss_imex,pouring,10,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-27-04,linoss_imex,pouring,11,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-27-27,linoss_imex,pouring,12,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-27-50,linoss_imex,pouring,13,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-28-13,linoss_imex,pouring,14,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-28-36,linoss_imex,pouring,15,1,,,1,1,Some odd swaying around the main path
+2025-09-10 19-29-22,lru,pouring,0,1,,,1,1,A bit shaky
+2025-09-10 19-29-45,lru,pouring,1,1,,,1,1,Some shaking at begninning
+2025-09-10 19-30-08,lru,pouring,2,1,,,1,1,Some shaking
+2025-09-10 19-30-31,lru,pouring,3,1,,,1,1,
+2025-09-10 19-30-54,lru,pouring,4,1,,,1,1,
+2025-09-10 19-31-17,lru,pouring,5,1,,,1,1,
+2025-09-10 19-31-40,lru,pouring,6,1,,,1,1,Some shaking
+2025-09-10 19-32-03,lru,pouring,7,1,,,1,1,
+2025-09-10 19-32-26,lru,pouring,8,1,,,1,1,
+2025-09-10 19-32-49,lru,pouring,9,1,,,1,1,Some shaking at beginning
+2025-09-10 19-33-12,lru,pouring,10,1,,,1,1,
+2025-09-10 19-33-35,lru,pouring,11,1,,,1,1,
+2025-09-10 19-33-58,lru,pouring,12,1,,,1,1,Some shaking at beginning
+2025-09-10 19-34-21,lru,pouring,13,1,,,1,1,
+2025-09-10 19-34-44,lru,pouring,14,1,,,1,1,
+2025-09-10 19-35-07,lru,pouring,15,1,,,1,1,
+2025-09-10 19-35-53,lstm,pouring,0,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-36-16,lstm,pouring,1,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-36-39,lstm,pouring,2,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-37-02,lstm,pouring,3,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-37-25,lstm,pouring,4,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-37-48,lstm,pouring,5,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-38-11,lstm,pouring,6,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-38-34,lstm,pouring,7,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-38-57,lstm,pouring,8,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-39-20,lstm,pouring,9,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-39-43,lstm,pouring,10,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-40-06,lstm,pouring,11,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-40-29,lstm,pouring,12,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-40-52,lstm,pouring,13,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-41-15,lstm,pouring,14,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-41-38,lstm,pouring,15,1,,,1,1,Often some wobbling at beginning
+2025-09-10 19-42-24,lstm_stack,pouring,0,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-42-47,lstm_stack,pouring,1,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-43-10,lstm_stack,pouring,2,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-43-33,lstm_stack,pouring,3,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-43-56,lstm_stack,pouring,4,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-44-19,lstm_stack,pouring,5,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-44-42,lstm_stack,pouring,6,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-45-05,lstm_stack,pouring,7,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-45-28,lstm_stack,pouring,8,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-45-51,lstm_stack,pouring,9,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-46-14,lstm_stack,pouring,10,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-46-37,lstm_stack,pouring,11,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 19-47-00,lstm_stack,pouring,12,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 21-11-57,lstm_stack,pouring,13,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 21-12-41,lstm_stack,pouring,14,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 21-13-24,lstm_stack,pouring,15,1,,,1,1,A brief fast jerk at beginning but smooth afterwards
+2025-09-10 21-14-50,s5,pouring,0,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-15-45,s5,pouring,1,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-16-31,s5,pouring,2,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-17-18,s5,pouring,3,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-18-03,s5,pouring,4,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-18-49,s5,pouring,5,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-19-34,s5,pouring,6,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-20-19,s5,pouring,7,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-21-03,s5,pouring,8,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-21-49,s5,pouring,9,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-22-34,s5,pouring,10,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-23-19,s5,pouring,11,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-24-12,s5,pouring,12,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-25-04,s5,pouring,13,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-39-09,s5,pouring,14,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-40-01,s5,pouring,15,1,,,1,1,Often a bit of shaking at beginning
+2025-09-10 21-41-34,transformer_attn,pouring,0,1,,,1,1,Looks pretty smooth
+2025-09-10 21-42-15,transformer_attn,pouring,1,1,,,1,1,Looks pretty smooth
+2025-09-10 21-42-55,transformer_attn,pouring,2,1,,,1,1,Looks pretty smooth
+2025-09-10 21-43-36,transformer_attn,pouring,3,1,,,1,1,Looks pretty smooth
+2025-09-10 21-44-19,transformer_attn,pouring,4,1,,,1,1,Looks pretty smooth
+2025-09-10 21-45-00,transformer_attn,pouring,5,0,1,,1,1,Looks pretty smooth
+2025-09-10 21-46-25,transformer_attn,pouring,6,0,1,,1,1,Looks pretty smooth
+2025-09-10 21-47-50,transformer_attn,pouring,7,1,,,1,1,Looks pretty smooth
+2025-09-10 21-48-32,transformer_attn,pouring,8,1,,,1,1,Looks pretty smooth
+2025-09-10 21-49-13,transformer_attn,pouring,9,1,,,1,1,Looks pretty smooth
+2025-09-10 21-49-54,transformer_attn,pouring,10,0,0,1,1,1,Looks pretty smooth
+2025-09-10 21-52-00,transformer_attn,pouring,11,1,,,1,1,Looks pretty smooth
+2025-09-10 21-52-41,transformer_attn,pouring,12,1,,,1,1,Looks pretty smooth
+2025-09-10 21-53-22,transformer_attn,pouring,13,1,,,1,1,Looks pretty smooth
+2025-09-10 21-54-03,transformer_attn,pouring,14,1,,,1,1,Looks pretty smooth
+2025-09-10 21-54-44,transformer_attn,pouring,15,1,,,1,1,Looks pretty smooth
+2025-09-10 21-56-05,transformer_ff,pouring,0,1,,,1,1,Looks pretty smooth
+2025-09-10 21-56-46,transformer_ff,pouring,1,1,,,1,1,Some shaking at beginning
+2025-09-10 21-57-27,transformer_ff,pouring,2,1,,,1,1,Looks pretty smooth
+2025-09-10 21-58-08,transformer_ff,pouring,3,0,1,,1,1,Looks pretty smooth
+2025-09-10 21-59-36,transformer_ff,pouring,4,1,,,1,1,Looks pretty smooth
+2025-09-10 22-00-21,transformer_ff,pouring,5,0,0,1,1,1,Looks pretty smooth
+2025-09-10 22-02-29,transformer_ff,pouring,6,1,,,1,1,Looks pretty smooth
+2025-09-10 22-03-10,transformer_ff,pouring,7,1,,,1,1,Looks pretty smooth
+2025-09-10 22-03-51,transformer_ff,pouring,8,1,,,1,1,Looks pretty smooth
+2025-09-10 22-04-33,transformer_ff,pouring,9,1,,,1,1,Looks pretty smooth
+2025-09-10 22-05-13,transformer_ff,pouring,10,1,,,1,1,Looks pretty smooth
+2025-09-10 22-05-56,transformer_ff,pouring,11,1,,,1,1,Looks pretty smooth
+2025-09-10 22-06-37,transformer_ff,pouring,12,1,,,1,1,Looks pretty smooth
+2025-09-10 22-07-18,transformer_ff,pouring,13,0,0,0,0,1,Looks pretty smooth
+2025-09-10 22-10-17,transformer_ff,pouring,14,1,,,1,1,Looks pretty smooth
+2025-09-10 22-10-58,transformer_ff,pouring,15,1,,,1,1,Looks pretty smooth
+2025-09-10 22-12-23,diff_transformer_attn,scooping_powder,0,0,1,,1,0,Shaky
+2025-09-10 22-13-50,diff_transformer_attn,scooping_powder,1,1,,,1,0,Shaky
+2025-09-10 22-14-31,diff_transformer_attn,scooping_powder,2,1,,,1,0,Shaky
+2025-09-10 22-15-11,diff_transformer_attn,scooping_powder,3,0,0,0,0,0,Shaky
+2025-09-10 22-17-21,diff_transformer_attn,scooping_powder,4,0,0,0,0,0,Shaky
+2025-09-10 22-19-27,diff_transformer_attn,scooping_powder,5,1,,,1,0,Shaky
+2025-09-10 22-20-08,diff_transformer_attn,scooping_powder,6,0,1,,1,0,Shaky
+2025-09-10 22-21-40,diff_transformer_attn,scooping_powder,7,0,0,0,0,0,Shaky
+2025-09-10 22-24-06,diff_transformer_attn,scooping_powder,8,1,,,1,0,Shaky
+2025-09-10 22-24-54,diff_transformer_attn,scooping_powder,9,0,0,0,0,0,Shaky
+2025-09-10 22-27-04,diff_transformer_attn,scooping_powder,10,1,,,1,0,Shaky
+2025-09-10 22-27-45,diff_transformer_attn,scooping_powder,11,1,,,1,0,Shaky
+2025-09-10 22-28-26,diff_transformer_attn,scooping_powder,12,1,,,1,0,Shaky
+2025-09-10 22-29-07,diff_transformer_attn,scooping_powder,13,0,0,0,0,0,Shaky
+2025-09-10 22-31-27,diff_transformer_attn,scooping_powder,14,0,0,0,0,0,Shaky
+2025-09-10 22-37-47,diff_transformer_ff,scooping_powder,0,0,1,,1,0,Shaky
+2025-09-10 22-39-40,diff_transformer_ff,scooping_powder,1,0,0,0,0,0,Shaky
+2025-09-10 22-43-05,diff_transformer_ff,scooping_powder,2,0,0,0,0,0,Shaky
+2025-09-10 22-45-56,diff_transformer_ff,scooping_powder,3,0,0,0,0,0,Shaky
+2025-09-10 22-48-49,diff_transformer_ff,scooping_powder,4,0,0,0,0,0,Shaky
+2025-09-10 22-51-42,diff_transformer_ff,scooping_powder,5,0,0,0,0,0,Shaky
+2025-09-10 22-54-10,diff_transformer_ff,scooping_powder,6,0,0,0,0,0,Shaky
+2025-09-10 22-56-40,diff_transformer_ff,scooping_powder,7,0,0,0,0,0,Shaky
+2025-09-10 22-59-36,diff_transformer_ff,scooping_powder,8,0,0,0,0,0,Shaky
+2025-09-10 23-01-48,diff_transformer_ff,scooping_powder,9,0,0,0,0,0,Shaky
+2025-09-10 23-04-07,diff_transformer_ff,scooping_powder,10,0,1,,1,0,Shaky
+2025-09-10 23-05-35,diff_transformer_ff,scooping_powder,11,0,0,0,0,0,Shaky
+2025-09-10 23-07-43,diff_transformer_ff,scooping_powder,12,0,0,0,0,0,Shaky
+2025-09-10 23-09-55,diff_transformer_ff,scooping_powder,13,1,,,1,0,Shaky
+2025-09-10 23-10-35,diff_transformer_ff,scooping_powder,14,0,0,0,0,0,Shaky
+2025-09-10 23-15-10,gru,scooping_powder,0,1,,,1,1,Looks pretty good
+2025-09-10 23-15-51,gru,scooping_powder,1,0,0,0,0,1,Looks pretty good
+2025-09-10 23-18-01,gru,scooping_powder,2,1,,,1,1,Looks pretty good
+2025-09-10 23-18-41,gru,scooping_powder,3,0,0,0,0,1,Looks pretty good
+2025-09-10 23-21-02,gru,scooping_powder,4,0,0,0,0,1,Looks pretty good
+2025-09-10 23-23-13,gru,scooping_powder,5,0,1,,1,1,Looks pretty good
+2025-09-10 23-24-42,gru,scooping_powder,6,0,0,0,0,1,Looks pretty good
+2025-09-10 23-26-54,gru,scooping_powder,7,1,,,1,1,Looks pretty good
+2025-09-10 23-27-39,gru,scooping_powder,8,1,,,1,1,Looks pretty good
+2025-09-10 23-28-20,gru,scooping_powder,9,0,0,0,0,1,Looks pretty good
+2025-09-10 23-31-16,gru,scooping_powder,10,0,0,0,0,1,Looks pretty good
+2025-09-10 23-33-38,gru,scooping_powder,11,0,0,0,0,1,Looks pretty good
+2025-09-10 23-35-48,gru,scooping_powder,12,1,,,1,1,Looks pretty good
+2025-09-10 23-36-28,gru,scooping_powder,13,1,,,1,1,Looks pretty good
+2025-09-10 23-37-08,gru,scooping_powder,14,1,,,1,1,Looks pretty good
+2025-09-10 23-38-36,gru_stack,scooping_powder,0,0,0,0,0,1,Looks pretty good
+2025-09-10 23-40-53,gru_stack,scooping_powder,1,0,0,0,0,1,Looks pretty good
+2025-09-10 23-43-14,gru_stack,scooping_powder,2,0,0,0,0,1,Looks pretty good
+2025-09-10 23-45-30,gru_stack,scooping_powder,3,0,0,0,0,1,Looks pretty good
+2025-09-10 23-47-45,gru_stack,scooping_powder,4,0,0,0,0,1,Looks pretty good
+2025-09-10 23-49-46,gru_stack,scooping_powder,5,1,,,1,1,Looks pretty good
+2025-09-10 23-50-27,gru_stack,scooping_powder,6,0,0,0,0,1,Looks pretty good
+2025-09-10 23-52-51,gru_stack,scooping_powder,7,0,0,0,0,1,Looks pretty good
+2025-09-10 23-55-06,gru_stack,scooping_powder,8,1,,,1,1,Looks pretty good
+2025-09-10 23-55-46,gru_stack,scooping_powder,9,1,,,1,1,Looks pretty good
+2025-09-10 23-56-28,gru_stack,scooping_powder,10,1,,,1,1,Looks pretty good
+2025-09-10 23-57-12,gru_stack,scooping_powder,11,1,,,1,1,Looks pretty good
+2025-09-10 23-57-52,gru_stack,scooping_powder,12,1,,,1,1,Looks pretty good
+2025-09-10 23-58-32,gru_stack,scooping_powder,13,1,,,1,1,Looks pretty good
+2025-09-11 00-01-26,gru_stack,scooping_powder,14,1,,,1,1,Looks pretty good
+2025-09-11 00-02-05,linoss_im,scooping_powder,0,1,,,1,1,Looks pretty good
+2025-09-11 00-02-45,linoss_im,scooping_powder,1,0,0,0,0,1,Looks pretty good
+2025-09-11 00-05-05,linoss_im,scooping_powder,2,1,,,1,1,Looks pretty good
+2025-09-11 00-05-48,linoss_im,scooping_powder,3,0,0,0,0,1,Looks pretty good
+2025-09-11 00-09-26,linoss_im,scooping_powder,4,0,0,0,0,1,Looks pretty good
+2025-09-11 00-12-09,linoss_im,scooping_powder,5,1,,,1,1,Looks pretty good
+2025-09-11 00-12-51,linoss_im,scooping_powder,6,0,0,0,0,1,Looks pretty good
+2025-09-11 00-16-10,linoss_im,scooping_powder,7,0,0,0,0,1,Looks pretty good
+2025-09-11 00-18-28,linoss_im,scooping_powder,8,1,,,1,1,Looks pretty good
+2025-09-11 00-19-08,linoss_im,scooping_powder,9,0,0,0,0,1,Looks pretty good
+2025-09-11 00-21-45,linoss_im,scooping_powder,10,0,0,0,0,1,Looks pretty good
+2025-09-11 00-24-42,linoss_im,scooping_powder,11,0,0,0,0,1,Looks pretty good
+2025-09-11 00-27-45,linoss_im,scooping_powder,12,1,,,1,1,Looks pretty good
+2025-09-11 00-28-26,linoss_im,scooping_powder,13,1,,,1,1,Looks pretty good
+2025-09-11 00-29-06,linoss_im,scooping_powder,14,0,0,0,0,1,Looks pretty good
+2025-09-11 00-34-51,linoss_imex,scooping_powder,0,1,,,1,1,Some wobbling at beginning
+2025-09-11 00-35-32,linoss_imex,scooping_powder,1,1,,,1,1,Some wobbling
+2025-09-11 00-36-11,linoss_imex,scooping_powder,2,0,0,1,1,1,Some shaking
+2025-09-11 00-38-24,linoss_imex,scooping_powder,3,0,0,0,0,1,
+2025-09-11 00-40-44,linoss_imex,scooping_powder,4,0,0,0,0,1,
+2025-09-11 00-42-49,linoss_imex,scooping_powder,5,1,,,1,1,
+2025-09-11 00-43-28,linoss_imex,scooping_powder,6,1,,,1,1,Some wobbling at beginning
+2025-09-11 00-44-09,linoss_imex,scooping_powder,7,0,0,0,0,1,
+2025-09-11 00-46-29,linoss_imex,scooping_powder,8,0,0,0,0,1,
+2025-09-11 00-48-43,linoss_imex,scooping_powder,9,1,,,1,1,
+2025-09-11 00-49-23,linoss_imex,scooping_powder,10,1,,,1,1,Some wobbling
+2025-09-11 00-50-03,linoss_imex,scooping_powder,11,0,0,0,0,1,
+2025-09-11 00-52-22,linoss_imex,scooping_powder,12,1,,,1,1,Some wobbling at beginning
+2025-09-11 00-53-02,linoss_imex,scooping_powder,13,1,,,1,1,
+2025-09-11 00-53-41,linoss_imex,scooping_powder,14,0,1,,1,1,Some wobbling
+2025-09-11 00-56-34,lru,scooping_powder,0,0,0,0,0,1,
+2025-09-11 00-58-51,lru,scooping_powder,1,0,0,0,0,1,
+2025-09-11 01-01-10,lru,scooping_powder,2,0,1,,1,1,
+2025-09-11 01-02-33,lru,scooping_powder,3,0,0,0,0,1,
+2025-09-11 01-04-57,lru,scooping_powder,4,0,0,0,0,1,
+2025-09-11 01-07-47,lru,scooping_powder,5,0,0,0,0,1,
+2025-09-11 01-09-55,lru,scooping_powder,6,0,0,0,0,1,
+2025-09-11 01-12-18,lru,scooping_powder,7,0,0,0,0,1,
+2025-09-11 01-14-34,lru,scooping_powder,8,1,,,1,1,
+2025-09-11 01-15-13,lru,scooping_powder,9,1,,,1,1,
+2025-09-11 01-15-53,lru,scooping_powder,10,0,0,0,0,1,Shaking at beginning
+2025-09-11 01-18-14,lru,scooping_powder,11,1,,,1,1,
+2025-09-11 01-18-54,lru,scooping_powder,12,1,,,1,1,
+2025-09-11 01-19-33,lru,scooping_powder,13,1,,,1,1,
+2025-09-11 01-20-13,lru,scooping_powder,14,0,0,0,0,1,
+2025-09-11 01-24-44,lstm,scooping_powder,0,1,,,1,1,Many had some wobbling/motion at begnning
+2025-09-11 01-25-24,lstm,scooping_powder,1,0,1,,1,1,Many had some wobbling/motion at begnning
+2025-09-11 01-26-53,lstm,scooping_powder,2,1,,,1,1,Many had some wobbling/motion at begnning
+2025-09-11 01-27-33,lstm,scooping_powder,3,0,1,,1,1,Many had some wobbling/motion at begnning
+2025-09-11 01-28-57,lstm,scooping_powder,4,0,0,0,0,1,Many had some wobbling/motion at begnning
+2025-09-11 01-30-58,lstm,scooping_powder,5,0,1,,1,1,Many had some wobbling/motion at begnning
+2025-09-11 01-32-26,lstm,scooping_powder,6,0,0,0,0,1,Many had some wobbling/motion at begnning
+2025-09-11 01-34-37,lstm,scooping_powder,7,1,,,1,1,Many had some wobbling/motion at begnning
+2025-09-11 01-35-16,lstm,scooping_powder,8,0,0,0,0,1,Many had some wobbling/motion at begnning
+2025-09-11 01-37-33,lstm,scooping_powder,9,0,0,0,0,1,Many had some wobbling/motion at begnning
+2025-09-11 01-39-54,lstm,scooping_powder,10,0,0,0,0,1,Many had some wobbling/motion at begnning
+2025-09-11 01-42-30,lstm,scooping_powder,11,1,,,1,1,Many had some wobbling/motion at begnning
+2025-09-11 01-43-11,lstm,scooping_powder,12,1,,,1,1,Many had some wobbling/motion at begnning
+2025-09-11 01-43-51,lstm,scooping_powder,13,1,,,1,1,Many had some wobbling/motion at begnning
+2025-09-11 01-44-31,lstm,scooping_powder,14,0,0,0,0,1,Many had some wobbling/motion at begnning
+2025-09-11 01-49-51,lstm_stack,scooping_powder,0,1,,,1,1,
+2025-09-11 01-50-30,lstm_stack,scooping_powder,1,0,0,0,0,1,
+2025-09-11 01-53-03,lstm_stack,scooping_powder,2,0,0,1,1,1,
+2025-09-11 01-55-46,lstm_stack,scooping_powder,3,1,,,1,1,
+2025-09-11 01-56-27,lstm_stack,scooping_powder,4,0,0,0,0,1,
+2025-09-11 01-59-17,lstm_stack,scooping_powder,5,1,,,1,1,
+2025-09-11 01-59-56,lstm_stack,scooping_powder,6,0,0,0,0,1,
+2025-09-11 02-02-55,lstm_stack,scooping_powder,7,0,0,0,0,1,
+2025-09-11 02-05-13,lstm_stack,scooping_powder,8,1,,,1,1,
+2025-09-11 02-05-53,lstm_stack,scooping_powder,9,0,0,0,0,1,Some wobbling
+2025-09-11 02-08-13,lstm_stack,scooping_powder,10,0,0,0,0,1,
+2025-09-11 02-10-46,lstm_stack,scooping_powder,11,1,,,1,1,
+2025-09-11 02-11-25,lstm_stack,scooping_powder,12,1,,,1,1,
+2025-09-11 02-12-05,lstm_stack,scooping_powder,13,0,1,,1,1,
+2025-09-11 02-13-37,lstm_stack,scooping_powder,14,0,0,0,0,1,
+2025-09-11 02-18-35,s5,scooping_powder,0,1,,,1,1,Some had a little wobbling/shaking
+2025-09-11 02-19-20,s5,scooping_powder,1,0,0,0,0,1,Some had a little wobbling/shaking
+2025-09-11 02-22-19,s5,scooping_powder,2,1,,,1,1,Some had a little wobbling/shaking
+2025-09-11 02-22-59,s5,scooping_powder,3,0,0,0,0,1,Some had a little wobbling/shaking
+2025-09-11 02-25-27,s5,scooping_powder,4,0,0,0,0,1,Some had a little wobbling/shaking
+2025-09-11 02-27-37,s5,scooping_powder,5,1,,,1,1,Some had a little wobbling/shaking
+2025-09-11 02-28-16,s5,scooping_powder,6,0,0,0,0,1,Some had a little wobbling/shaking
+2025-09-11 02-31-26,s5,scooping_powder,7,0,0,0,0,1,Some had a little wobbling/shaking
+2025-09-11 02-34-33,s5,scooping_powder,8,1,,,1,1,Some had a little wobbling/shaking
+2025-09-11 02-35-12,s5,scooping_powder,9,0,0,0,0,1,Some had a little wobbling/shaking
+2025-09-11 02-37-36,s5,scooping_powder,10,0,0,0,0,1,Some had a little wobbling/shaking
+2025-09-11 02-40-03,s5,scooping_powder,11,0,0,0,0,1,Some had a little wobbling/shaking
+2025-09-11 02-42-37,s5,scooping_powder,12,1,,,1,1,Some had a little wobbling/shaking
+2025-09-11 02-43-17,s5,scooping_powder,13,1,,,1,1,Some had a little wobbling/shaking
+2025-09-11 02-43-56,s5,scooping_powder,14,0,0,0,0,1,Some had a little wobbling/shaking
+2025-09-11 02-49-28,transformer_attn,scooping_powder,0,0,0,0,0,1,
+2025-09-11 02-51-49,transformer_attn,scooping_powder,1,0,0,0,0,1,
+2025-09-11 02-53-58,transformer_attn,scooping_powder,2,1,,,1,1,
+2025-09-11 02-54-38,transformer_attn,scooping_powder,3,0,0,0,0,1,
+2025-09-11 02-57-22,transformer_attn,scooping_powder,4,0,0,0,0,1,
+2025-09-11 02-59-35,transformer_attn,scooping_powder,5,0,0,0,0,1,
+2025-09-11 03-01-50,transformer_attn,scooping_powder,6,0,0,0,0,1,
+2025-09-11 03-04-10,transformer_attn,scooping_powder,7,0,0,0,0,1,
+2025-09-11 03-06-33,transformer_attn,scooping_powder,8,1,,,1,1,
+2025-09-11 03-07-12,transformer_attn,scooping_powder,9,0,0,0,0,1,
+2025-09-11 03-09-20,transformer_attn,scooping_powder,10,1,,,1,1,
+2025-09-11 03-10-01,transformer_attn,scooping_powder,11,1,,,1,1,
+2025-09-11 03-10-40,transformer_attn,scooping_powder,12,1,,,1,1,
+2025-09-11 03-11-19,transformer_attn,scooping_powder,13,1,,,1,1,
+2025-09-11 03-11-58,transformer_attn,scooping_powder,14,0,0,0,0,1,
+2025-09-11 03-16-25,transformer_ff,scooping_powder,0,1,,,1,1,
+2025-09-11 03-17-04,transformer_ff,scooping_powder,1,0,0,0,0,1,
+2025-09-11 03-19-28,transformer_ff,scooping_powder,2,1,,,1,1,
+2025-09-11 03-20-08,transformer_ff,scooping_powder,3,0,0,1,1,1,
+2025-09-11 03-22-37,transformer_ff,scooping_powder,4,0,0,0,0,1,
+2025-09-11 03-24-38,transformer_ff,scooping_powder,5,0,0,0,0,1,
+2025-09-11 03-26-47,transformer_ff,scooping_powder,6,0,0,0,0,1,
+2025-09-11 03-28-59,transformer_ff,scooping_powder,7,0,0,0,0,1,
+2025-09-11 03-31-14,transformer_ff,scooping_powder,8,0,0,0,0,1,
+2025-09-11 03-33-14,transformer_ff,scooping_powder,9,0,0,0,0,1,
+2025-09-11 03-35-18,transformer_ff,scooping_powder,10,1,,,1,1,
+2025-09-11 03-35-58,transformer_ff,scooping_powder,11,0,0,0,0,1,
+2025-09-11 03-38-04,transformer_ff,scooping_powder,12,1,,,1,1,
+2025-09-11 03-38-43,transformer_ff,scooping_powder,13,0,0,0,0,1,
+2025-09-11 03-41-53,transformer_ff,scooping_powder,14,0,0,0,0,1,
+2025-09-11 03-46-25,human,stirring,4,0,0,0,0,1,
+2025-09-11 03-49-28,human,stirring,5,0,0,0,0,1,
+2025-09-11 03-51-35,human,stirring,6,0,0,0,0,1,
+2025-09-11 03-54-37,human,stirring,7,0,0,0,0,1,
+2025-09-11 03-56-28,human,stirring,8,0,0,0,0,1,
+2025-09-11 03-58-22,human,stirring,9,0,0,0,0,1,
+2025-09-11 04-00-00,human,stirring,10,0,0,0,0,1,
+2025-09-11 04-02-09,human,stirring,11,0,0,0,0,1,
+2025-09-11 04-05-05,human,stirring,12,1,,,1,1,
+2025-09-11 04-05-44,human,stirring,13,1,,,1,1,
+2025-09-11 04-06-23,human,stirring,14,1,,,1,1,
+2025-09-11 04-09-01,human,stirring,15,1,,,1,1,
+2025-09-11 04-09-41,diff_transformer_attn,stirring,0,0,1,,1,0,Shaky
+2025-09-11 04-10-54,diff_transformer_attn,stirring,1,1,,,1,0,Shaky
+2025-09-11 04-11-33,diff_transformer_attn,stirring,2,0,0,0,0,0,Shaky
+2025-09-11 04-13-58,diff_transformer_attn,stirring,3,0,0,0,0,0,Shaky
+2025-09-11 04-16-13,diff_transformer_attn,stirring,4,0,0,0,0,0,Shaky
+2025-09-11 04-19-03,diff_transformer_attn,stirring,5,0,0,0,0,0,Shaky
+2025-09-11 04-21-26,diff_transformer_attn,stirring,6,0,0,0,0,0,Shaky
+2025-09-11 04-23-46,diff_transformer_attn,stirring,7,0,0,0,0,0,Shaky
+2025-09-11 04-25-38,diff_transformer_attn,stirring,8,0,0,1,1,0,Shaky
+2025-09-11 04-27-54,diff_transformer_attn,stirring,9,0,0,0,0,0,Shaky
+2025-09-11 04-29-47,diff_transformer_attn,stirring,10,0,0,0,0,0,Shaky
+2025-09-11 04-31-53,diff_transformer_attn,stirring,11,0,0,0,0,0,Shaky
+2025-09-11 04-33-58,diff_transformer_attn,stirring,12,1,,,1,0,Shaky
+2025-09-11 04-34-37,diff_transformer_attn,stirring,13,1,,,1,0,Shaky
+2025-09-11 04-35-16,diff_transformer_attn,stirring,14,0,0,0,0,0,Shaky
+2025-09-11 04-37-23,diff_transformer_attn,stirring,15,0,0,0,0,0,Shaky
+2025-09-11 04-42-05,diff_transformer_ff,stirring,0,0,0,0,0,0,Shaky
+2025-09-11 04-44-12,diff_transformer_ff,stirring,1,0,0,0,0,0,Shaky
+2025-09-11 04-46-18,diff_transformer_ff,stirring,2,0,0,0,0,0,Shaky
+2025-09-11 04-48-23,diff_transformer_ff,stirring,3,0,0,0,0,0,Shaky
+2025-09-11 04-51-06,diff_transformer_ff,stirring,4,0,0,0,0,0,Shaky
+2025-09-11 04-53-26,diff_transformer_ff,stirring,5,0,0,0,0,0,Shaky
+2025-09-11 04-55-40,diff_transformer_ff,stirring,6,0,0,0,0,0,Shaky
+2025-09-11 04-58-03,diff_transformer_ff,stirring,7,0,0,0,0,0,Shaky
+2025-09-11 04-59-56,diff_transformer_ff,stirring,8,0,0,0,0,0,Shaky
+2025-09-11 05-01-55,diff_transformer_ff,stirring,9,0,0,0,0,0,Shaky
+2025-09-11 05-03-56,diff_transformer_ff,stirring,10,0,0,0,0,0,Shaky
+2025-09-11 05-06-04,diff_transformer_ff,stirring,11,0,0,0,0,0,Shaky
+2025-09-11 05-08-58,diff_transformer_ff,stirring,12,0,0,0,0,0,Shaky
+2025-09-11 05-11-06,diff_transformer_ff,stirring,13,0,0,0,0,0,Shaky
+2025-09-11 05-13-15,diff_transformer_ff,stirring,14,0,0,0,0,0,Shaky
+2025-09-11 05-15-06,diff_transformer_ff,stirring,15,0,0,0,0,0,Shaky
+2025-09-11 05-18-59,gru,stirring,0,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-21-07,gru,stirring,1,1,,,1,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-21-46,gru,stirring,2,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-24-08,gru,stirring,3,0,1,,1,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-25-31,gru,stirring,4,1,,,1,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-26-10,gru,stirring,5,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-28-22,gru,stirring,6,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-30-26,gru,stirring,7,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-32-18,gru,stirring,8,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-34-15,gru,stirring,9,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-36-16,gru,stirring,10,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-39-24,gru,stirring,11,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-42-18,gru,stirring,12,1,,,1,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-42-58,gru,stirring,13,0,0,1,1,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-45-11,gru,stirring,14,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-47-37,gru,stirring,15,0,0,0,0,1,"Placement seems reasonable, but no stirring motion"
+2025-09-11 05-51-25,gru_stack,stirring,0,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 05-52-04,gru_stack,stirring,1,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 05-52-43,gru_stack,stirring,2,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 05-55-53,gru_stack,stirring,3,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 05-56-32,gru_stack,stirring,4,0,1,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 05-58-38,gru_stack,stirring,5,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-01-34,gru_stack,stirring,6,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-03-44,gru_stack,stirring,7,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-05-38,gru_stack,stirring,8,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-07-32,gru_stack,stirring,9,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-10-37,gru_stack,stirring,10,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-12-47,gru_stack,stirring,11,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-13-27,gru_stack,stirring,12,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-14-07,gru_stack,stirring,13,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-14-47,gru_stack,stirring,14,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-15-27,gru_stack,stirring,15,0,0,1,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-18-21,linoss_im,stirring,0,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-19-00,linoss_im,stirring,1,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-19-40,linoss_im,stirring,2,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-22-12,linoss_im,stirring,3,1,,,1,1,Some stirring motion
+2025-09-11 06-22-51,linoss_im,stirring,4,1,,,1,1,Better stirring motion
+2025-09-11 06-23-31,linoss_im,stirring,5,0,0,0,0,1,Some stirring motion
+2025-09-11 06-25-38,linoss_im,stirring,6,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-27-44,linoss_im,stirring,7,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-29-34,linoss_im,stirring,8,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-31-28,linoss_im,stirring,9,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-33-24,linoss_im,stirring,10,0,0,0,0,1,Better stirring motion
+2025-09-11 06-35-33,linoss_im,stirring,11,0,0,0,0,1,Better stirring motion
+2025-09-11 06-37-39,linoss_im,stirring,12,1,,,1,1,Some stirring motion
+2025-09-11 06-38-18,linoss_im,stirring,13,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-40-38,linoss_im,stirring,14,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-41-18,linoss_im,stirring,15,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 06-45-06,linoss_imex,stirring,0,1,,,1,1,"Good stirring motion, and some slight tap on pitcher"
+2025-09-11 06-45-46,linoss_imex,stirring,1,0,1,,1,1,Some stirring motion
+2025-09-11 06-47-02,linoss_imex,stirring,2,0,0,0,0,1,Some stirring movement
+2025-09-11 06-49-14,linoss_imex,stirring,3,1,,,1,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 06-49-54,linoss_imex,stirring,4,0,0,0,0,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 06-52-59,linoss_imex,stirring,5,0,0,0,0,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 06-55-09,linoss_imex,stirring,6,0,0,0,0,1,Some stirring movement
+2025-09-11 06-57-14,linoss_imex,stirring,7,0,0,0,0,1,Good stirring motion
+2025-09-11 06-59-05,linoss_imex,stirring,8,0,0,0,0,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 07-01-47,linoss_imex,stirring,9,0,0,0,0,1,"Some stirring movement, and some tap on pitcher"
+2025-09-11 07-03-38,linoss_imex,stirring,10,0,0,0,0,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 07-05-46,linoss_imex,stirring,11,0,0,0,0,1,Good stirring motion
+2025-09-11 07-07-52,linoss_imex,stirring,12,1,,,1,1,"Some stirring movement, and some tap on pitcher"
+2025-09-11 07-08-31,linoss_imex,stirring,13,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-09-10,linoss_imex,stirring,14,0,1,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-10-33,linoss_imex,stirring,15,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-14-19,lru,stirring,0,1,,,1,1,Good stirring motion
+2025-09-11 07-14-59,lru,stirring,1,1,,,1,1,Some stirring motion
+2025-09-11 07-15-38,lru,stirring,2,0,0,0,0,1,Some stirring motion
+2025-09-11 07-17-56,lru,stirring,3,1,,,1,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 07-18-36,lru,stirring,4,1,,,1,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 07-19-16,lru,stirring,5,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-22-11,lru,stirring,6,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-24-10,lru,stirring,7,0,0,0,0,1,Good stirring motion
+2025-09-11 07-26-50,lru,stirring,8,1,,,1,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 07-27-29,lru,stirring,9,0,0,0,0,1,"Some stirring movement, and some tap on pitcher"
+2025-09-11 07-29-21,lru,stirring,10,0,0,0,0,1,Good stirring motion
+2025-09-11 07-31-28,lru,stirring,11,1,,,1,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 07-32-07,lru,stirring,12,1,,,1,1,Good stirring motion
+2025-09-11 07-32-47,lru,stirring,13,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-35-09,lru,stirring,14,1,,,1,1,Some stirring motion
+2025-09-11 07-36-28,lru,stirring,15,0,0,1,1,1,Some stirring motion
+2025-09-11 07-38-43,lstm,stirring,0,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-39-22,lstm,stirring,1,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-40-02,lstm,stirring,2,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-42-55,lstm,stirring,3,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-45-58,lstm,stirring,4,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-46-37,lstm,stirring,5,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-48-45,lstm,stirring,6,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-51-14,lstm,stirring,7,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-53-11,lstm,stirring,8,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-55-21,lstm,stirring,9,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-57-13,lstm,stirring,10,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 07-59-19,lstm,stirring,11,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-01-26,lstm,stirring,12,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-02-06,lstm,stirring,13,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-02-47,lstm,stirring,14,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-03-27,lstm,stirring,15,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-07-30,lstm_stack,stirring,0,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-08-09,lstm_stack,stirring,1,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-08-49,lstm_stack,stirring,2,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-11-08,lstm_stack,stirring,3,0,1,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-12-31,lstm_stack,stirring,4,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-13-10,lstm_stack,stirring,5,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-15-15,lstm_stack,stirring,6,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-17-36,lstm_stack,stirring,7,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-19-28,lstm_stack,stirring,8,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-21-23,lstm_stack,stirring,9,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-23-12,lstm_stack,stirring,10,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-25-18,lstm_stack,stirring,11,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-27-18,lstm_stack,stirring,12,0,1,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-28-41,lstm_stack,stirring,13,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-30-55,lstm_stack,stirring,14,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-31-39,lstm_stack,stirring,15,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-35-27,s5,stirring,0,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-36-08,s5,stirring,1,0,0,1,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-38-18,s5,stirring,2,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-40-43,s5,stirring,3,1,,,1,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 08-41-22,s5,stirring,4,1,,,1,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 08-42-03,s5,stirring,5,0,0,0,0,1,Some stirring motion
+2025-09-11 08-44-06,s5,stirring,6,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-46-13,s5,stirring,7,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-48-04,s5,stirring,8,0,0,0,0,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-49-56,s5,stirring,9,0,0,0,0,1,Some stirring motion
+2025-09-11 08-51-49,s5,stirring,10,0,0,0,0,1,Some stirring motion
+2025-09-11 08-53-56,s5,stirring,11,0,0,0,0,1,"Good stirring motion, and some tap on pitcher"
+2025-09-11 08-56-05,s5,stirring,12,1,,,1,1,Some stirring motion
+2025-09-11 08-56-45,s5,stirring,13,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-57-24,s5,stirring,14,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-58-04,s5,stirring,15,1,,,1,1,"Placement seems reasonable, but little to no stirring motion"
+2025-09-11 08-59-24,transformer_attn,stirring,0,1,,,1,1,"Flap stirring motion, distinct taps on pitcher"
+2025-09-11 09-00-03,transformer_attn,stirring,1,1,,,1,1,"Good stirring motion but outside, distinct taps on pitcher"
+2025-09-11 09-00-43,transformer_attn,stirring,2,0,0,0,0,1,"Good stirring motion but outside, distinct taps on pitcher"
+2025-09-11 09-03-05,transformer_attn,stirring,3,1,,,1,1,"Good stirring motion but outside, distinct taps on pitcher"
+2025-09-11 09-03-44,transformer_attn,stirring,4,0,1,,1,1,"Good stirring motion, distinct taps on pitcher"
+2025-09-11 09-05-07,transformer_attn,stirring,5,0,0,0,0,1,"Some stirring motion, distinct taps on pitcher"
+2025-09-11 09-07-15,transformer_attn,stirring,6,0,0,0,0,1,"Little stirring motion, distinct taps on pitcher"
+2025-09-11 09-09-26,transformer_attn,stirring,7,0,0,0,0,1,"Good stirring motion, distinct taps on pitcher"
+2025-09-11 09-11-17,transformer_attn,stirring,8,0,0,0,0,1,"Good stirring motion but outside, distinct taps on pitcher"
+2025-09-11 09-13-12,transformer_attn,stirring,9,0,0,0,0,1,"Little stirring motion, distinct taps on pitcher"
+2025-09-11 09-15-04,transformer_attn,stirring,10,0,0,0,0,1,"Good stirring motion, distinct taps on pitcher"
+2025-09-11 09-17-10,transformer_attn,stirring,11,0,0,0,0,1,"Good stirring motion, distinct taps on pitcher"
+2025-09-11 09-19-13,transformer_attn,stirring,12,1,,,1,1,"Good stirring motion, distinct taps on pitcher"
+2025-09-11 09-19-53,transformer_attn,stirring,13,0,0,0,0,1,"Flap stirring motion, distinct taps on pitcher"
+2025-09-11 09-22-05,transformer_attn,stirring,14,1,,,1,1,"Good stirring motion but outside, distinct taps on pitcher"
+2025-09-11 09-22-46,transformer_attn,stirring,15,1,,,1,1,"Good stirring motion, distinct taps on pitcher"
+2025-09-11 09-58-28,transformer_ff,stirring,0,0,0,0,0,1,"Stirring movement, some tap on pitcher"
+2025-09-11 10-00-35,transformer_ff,stirring,1,1,,,1,1,"Stirring movement, distinct taps on pitcher"
+2025-09-11 10-00-59,transformer_ff,stirring,2,0,0,0,0,1,"Stirring flap but outside, distinct tap on pitcher"
+2025-09-11 10-03-12,transformer_ff,stirring,3,0,0,0,0,1,"Good stirring motion but outside, distinct taps on pitcher"
+2025-09-11 10-05-17,transformer_ff,stirring,4,1,,,1,1,"Little stirring motion, distinct taps on pitcher"
+2025-09-11 10-05-41,transformer_ff,stirring,5,0,0,0,0,1,"Little stirring motion, distinct taps on pitcher"
+2025-09-11 10-07-45,transformer_ff,stirring,6,0,0,0,0,1,"Good stirring motion but outside, distinct taps on pitcher"
+2025-09-11 10-09-49,transformer_ff,stirring,7,0,0,0,0,1,"Good stirring motion, distinct taps on pitcher"
+2025-09-11 10-11-38,transformer_ff,stirring,8,0,0,0,0,1,"Good stirring motion, distinct taps on pitcher"
+2025-09-11 10-13-30,transformer_ff,stirring,9,0,0,0,0,1,"Good stirring motion but outside, distinct tap on pitcher"
+2025-09-11 10-15-22,transformer_ff,stirring,10,0,0,0,0,1,"Good stirring motion, distinct tap on pitcher"
+2025-09-11 10-17-29,transformer_ff,stirring,11,0,0,0,0,1,"Good stirring motion, distinct taps on pitcher"
+2025-09-11 10-19-41,transformer_ff,stirring,12,1,,,1,1,"Good stirring motion, distinct taps on pitcher"
+2025-09-11 10-20-05,transformer_ff,stirring,13,0,0,1,1,1,"Some stir flaps outside, distinct taps on pitcher"
+2025-09-11 10-22-01,transformer_ff,stirring,14,1,,,1,1,"Some stir flaps, distinct taps on pitcher"
+2025-09-11 10-22-25,transformer_ff,stirring,15,0,1,,1,1,"Some stirring motion, distinct taps on pitcher"
